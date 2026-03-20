@@ -2,6 +2,7 @@
   import tzlookup from 'tz-lookup';
   import { location } from '../stores/calendar.js';
   import type { Location } from '../../core/types.js';
+  import { validateCoords } from '../utils/coords.js';
 
   const MAPS_KEY = import.meta.env.GOOGLE_MAPS_API_KEY;
   const COOKIE_NAME = 'mwcal_location';
@@ -26,7 +27,12 @@
   async function resolveLocation(lat: number, lon: number, knownName?: string): Promise<void> {
     loading = true;
     error = '';
-    const timezone = tzlookup(lat, lon) ?? 'UTC';
+    let timezone: string;
+    try {
+      timezone = tzlookup(lat, lon) ?? 'UTC';
+    } catch {
+      timezone = 'UTC';
+    }
     let name = knownName ?? `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
     if (!knownName) {
       try {
@@ -69,18 +75,21 @@
     } catch { /* silent — keep default */ }
   }
 
+  // ── Reactive UI state ────────────────────────────────────────────────────
+  let latInput     = $state($location.lat.toFixed(4));
+  let lonInput     = $state($location.lon.toFixed(4));
+  let resolvedName = $state($location.name ?? '');
+
   // ── Initialise: cookie → GeoIP → default ────────────────────────────────
   const saved = loadCookie();
   if (saved) {
     location.set(saved);
+    latInput     = saved.lat.toFixed(4);
+    lonInput     = saved.lon.toFixed(4);
+    resolvedName = saved.name ?? '';
   } else {
     geoIPLoad();
   }
-
-  // ── Reactive UI state (seeded from current store value) ──────────────────
-  let latInput     = $state($location.lat.toFixed(4));
-  let lonInput     = $state($location.lon.toFixed(4));
-  let resolvedName = $state($location.name ?? '');
   let searchQuery  = $state('');
   let suggestions  = $state<Suggestion[]>([]);
   let showDropdown = $state(false);
@@ -177,8 +186,8 @@
   async function applyInputs() {
     const lat = parseFloat(latInput);
     const lon = parseFloat(lonInput);
-    if (isNaN(lat) || lat < -90  || lat > 90)  { error = 'Latitude must be −90 to 90';   return; }
-    if (isNaN(lon) || lon < -180 || lon > 180) { error = 'Longitude must be −180 to 180'; return; }
+    const err = validateCoords(lat, lon);
+    if (err) { error = err; return; }
     await resolveLocation(lat, lon);
   }
 

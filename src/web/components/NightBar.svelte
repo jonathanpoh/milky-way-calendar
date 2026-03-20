@@ -62,7 +62,7 @@
 
   interface MoonSpan { left: number; right: number; }
 
-  const moonSpans = $derived((): MoonSpan[] => {
+  const moonSpans = $derived.by((): MoonSpan[] => {
     if (row.moon.moonrise === null && row.moon.moonset === null) return [];
     const r = moonriseRaw;
     const s = moonsetRaw;
@@ -98,13 +98,13 @@
     return spans.filter(sp => sp.left < sp.right);
   });
 
-  const hasMoon = $derived(moonSpans().length > 0);
+  const hasMoon = $derived(moonSpans.length > 0);
   const moonOpacity = $derived(0.3 + (row.moon.illumination / 100) * 0.55);
 
   // ── MW/GC segments split by moon presence ────────────────────────────────
   type Span = { s: number; e: number };
   function splitByMoon(start: number, end: number): { free: Span[]; lit: Span[] } {
-    const spans = moonSpans();
+    const spans = moonSpans;
     if (spans.length === 0) return { free: [{ s: start, e: end }], lit: [] };
     // Collect all boundaries within [start, end]
     const bounds = [start, end];
@@ -161,7 +161,7 @@
 
   // MW labels — rise label sits left of its tick (right-aligned), set label sits right (left-aligned).
   // Near the bar edges the label snaps to the edge while the tick stays at the correct position.
-  const mwLabels = $derived((): Label[] => {
+  const mwLabels = $derived.by((): Label[] => {
     const labels: Label[] = [];
     if (mwStartPct !== null) {
       const x = mwStartPct;
@@ -193,7 +193,7 @@
     return x < 50 ? 'translateX(calc(-100% - 3px))' : 'translateX(3px)';
   }
 
-  const skyLabels = $derived((): Label[] => {
+  const skyLabels = $derived.by((): Label[] => {
     const raw: RawLabel[] = [];
     const add = (x: number | null, text: string, cls: string) => {
       if (x !== null && text) raw.push({ x, text, cls });
@@ -208,7 +208,7 @@
   // Moon labels — float below all lanes, only for events within the bar window.
   // Moonrise sits left of its tick (right-aligned), moonset sits right (left-aligned).
   // Near the bar edges the label snaps to the edge while the tick stays at the correct position.
-  const moonLabels = $derived((): Label[] => {
+  const moonLabels = $derived.by((): Label[] => {
     if (!hasMoon) return [];
     const labels: Label[] = [];
     if (moonriseRaw !== null && moonriseRaw > 0 && moonriseRaw < 100) {
@@ -232,14 +232,18 @@
     return labels;
   });
 
-  const allTicks = $derived(() => [...mwLabels(), ...skyLabels(), ...moonLabels()]);
+  const allTicks = $derived.by(() => [...mwLabels, ...skyLabels, ...moonLabels]);
 </script>
 
-<div class="night-bar-wrap">
+<div
+  class="night-bar-wrap"
+  role="img"
+  aria-label="Night bar: {row.mwWindow ? `MW visible ${fmtTime(row.mwWindow.start)}–${fmtTime(row.mwWindow.end)}, ${row.mwWindow.durationHours.toFixed(1)}h` : 'no MW visibility'}"
+>
 
   <!-- MW labels: floating above, in the padding-top area -->
   <div class="float-labels mw-labels" class:visible={hovering} aria-hidden="true">
-    {#each mwLabels() as lbl}
+    {#each mwLabels as lbl}
       <span class="lbl {lbl.cls}"
         style="left:{lbl.labelX ?? lbl.x}%; bottom:2px; transform:{lbl.xform};"
       >{lbl.text}</span>
@@ -276,7 +280,7 @@
       <div class="seg" style="left:{twilightStartPct}%;width:{sunrisePct-twilightStartPct}%;background:linear-gradient(to right,#0f0f22,#2a2050)"></div>
       <div class="seg day" style="left:{sunrisePct}%;width:{100-sunrisePct}%"></div>
       <!-- Sky labels rendered inside the bar -->
-      {#each skyLabels() as lbl}
+      {#each skyLabels as lbl}
         <span class="lbl-inside {lbl.cls}"
           style="left:{lbl.x}%; transform:{lbl.xform} translateY(-50%);"
         >{lbl.text}</span>
@@ -292,14 +296,14 @@
       <div class="seg day" style="left:0%;width:{sunsetPct}%"></div>
       <div class="seg" style="left:{sunsetPct}%;width:{sunrisePct-sunsetPct}%;background:#09090f"></div>
       <div class="seg day" style="left:{sunrisePct}%;width:{100-sunrisePct}%"></div>
-      {#each moonSpans() as ms}
+      {#each moonSpans as ms}
         <div class="seg" style="left:{ms.left}%;width:{ms.right-ms.left}%;background:rgba(255,200,80,{moonOpacity})"></div>
       {/each}
     </div>
 
     <!-- Tick marks spanning all lanes -->
     <div class="ticks-overlay">
-      {#each allTicks() as lbl}
+      {#each allTicks as lbl}
         <div class="tick {lbl.cls}" style="left:{lbl.x}%"></div>
       {/each}
     </div>
@@ -308,7 +312,7 @@
 
   <!-- Moon labels: floating below, in the padding-bottom area -->
   <div class="float-labels moon-labels" class:visible={hovering} aria-hidden="true">
-    {#each moonLabels() as lbl}
+    {#each moonLabels as lbl}
       <span class="lbl {lbl.cls}"
         style="left:{lbl.labelX ?? lbl.x}%; top:2px; transform:{lbl.xform};"
       >{lbl.text}</span>

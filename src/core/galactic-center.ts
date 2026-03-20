@@ -1,6 +1,7 @@
 import A from './astronomy.js';
 import type { Location, GalacticCenterData } from './types.js';
 import { makeObserver } from './observer.js';
+import { localNoonUTC } from './moon.js';
 
 // Sgr A* (Galactic Center) J2000 coordinates
 // RA: 17h 45m 40.04s ≈ 17.7611 hours; Dec: -29° 00' 28.1" ≈ -29.0078°
@@ -47,9 +48,11 @@ export function getGalacticCenterData(location: Location, date: Date): GalacticC
   ensureGCRegistered();
   const observer = makeObserver(location);
 
-  // Use noon UTC as anchor to avoid picking up previous-night events when UTC midnight
-  // falls mid-night for western timezones.
-  const noonUTC = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12));
+  // Anchor at local noon so the search window starts before both the GC rise and the dark
+  // window regardless of timezone. UTC noon fails for eastern zones (UTC+9+) where the GC
+  // can rise just before UTC noon — the search then skips to the next day's rise, producing
+  // a null MW window (e.g. Sydney in April: GC rises ~11:18 UTC, UTC noon misses it).
+  const noonUTC = localNoonUTC(date, location.timezone);
 
   // Rise: first rise after noon UTC
   const riseResult = A.SearchRiseSet(A.Body.Star1, observer, +1, noonUTC, 1, 0);

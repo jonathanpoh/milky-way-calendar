@@ -1,6 +1,6 @@
 <script lang="ts">
-  interface Props { phaseAngle: number; size?: number; }
-  let { phaseAngle, size = 24 }: Props = $props();
+  interface Props { phaseAngle: number; size?: number; illumination?: number; }
+  let { phaseAngle, size = 24, illumination }: Props = $props();
 
   // phaseAngle: MoonPhase convention: 0/360=new moon, 180=full moon
   const normalized = $derived(((phaseAngle % 360) + 360) % 360);
@@ -27,7 +27,7 @@
   const moonFill = '#f9e2af';
 </script>
 
-<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} xmlns="http://www.w3.org/2000/svg" aria-label="Moon phase">
+<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} xmlns="http://www.w3.org/2000/svg" role="img" aria-label={illumination != null ? `Moon phase: ${illumination}% illuminated` : 'Moon phase'}>
   <circle cx={r} cy={r} r={r} fill={bgFill} />
   {#if path}
     <path d={path} fill={moonFill} />

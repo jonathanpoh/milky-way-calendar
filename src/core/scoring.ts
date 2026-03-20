@@ -25,6 +25,6 @@ export function scoreNight(
   const moonOk = moon.illumination < 25 || moonFrac < 0.25;
 
   if (clearHours >= 2 && moonOk) return 'best';
-  if (mwWindow.durationHours > 0) return 'partial';
+  if (mwWindow.durationHours >= 0.5) return 'partial';
   return 'not-visible';
 }

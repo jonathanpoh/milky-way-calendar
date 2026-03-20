@@ -16,7 +16,7 @@
   let selectedMonth = $state<number>(currentMonth);
 
   // Derive the set of months that actually appear in the rows.
-  const months = $derived(() => {
+  const months = $derived.by(() => {
     const seen = new Map<number, { label: string; best: number; partial: number; total: number }>();
     for (const row of rows) {
       const m = row.date.getUTCMonth();
@@ -79,7 +79,7 @@
 
   // When rows change (new year / location), reset to current month (or first available)
   $effect(() => {
-    const available = months();
+    const available = months;
     rows; // track
     const defaultMonth = $year === currentYear ? currentMonth : 0;
     if (available.some(([m]) => m === defaultMonth)) {
@@ -128,7 +128,7 @@
       </ul>
     {/if}
   </div>
-  {#each months() as [m, info]}
+  {#each months as [m, info]}
     <button
       class="month-btn"
       class:active={selectedMonth === m}
@@ -137,7 +137,8 @@
   {/each}
 </div>
 
-<table>
+<div class="table-scroll">
+<table aria-label="Milky Way visibility calendar for {$year}">
   <thead>
     <tr>
       <th>Date</th>
@@ -157,6 +158,7 @@
     {/if}
   </tbody>
 </table>
+</div>
 
 <style>
   /* Month pill bar */
@@ -245,6 +247,10 @@
   }
   .month-btn:hover  { background: #313244; border-color: #6c7086; color: #cdd6f4; }
   .month-btn.active { background: #313244; border-color: #89b4fa; color: #cdd6f4; }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
 
   table {
     border-collapse: collapse;

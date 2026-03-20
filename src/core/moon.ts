@@ -6,7 +6,7 @@ import { makeObserver } from './observer.js';
 // Anchoring to local noon ensures moonrise/moonset searches always start before
 // the night window regardless of timezone (e.g. Tokyo UTC+9: noon UTC = 21:00 JST,
 // which is already past sunset and misses afternoon/early-evening moon events).
-function localNoonUTC(date: Date, timezone?: string): Date {
+export function localNoonUTC(date: Date, timezone?: string): Date {
   const noonUTC = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12));
   if (!timezone) return noonUTC;
   const parts = new Intl.DateTimeFormat('en-GB', {

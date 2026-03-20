@@ -24,17 +24,21 @@
   class={row.rating}
   onmouseenter={() => hovering = true}
   onmouseleave={() => hovering = false}
+  onfocusin={() => hovering = true}
+  onfocusout={() => hovering = false}
 >
   <td class="date">{dateStr}</td>
   <td class="rating">
-    {row.rating === 'best' ? '★' : row.rating === 'partial' ? '◑' : '✗'}
+    <span aria-label={row.rating === 'best' ? 'Best visibility' : row.rating === 'partial' ? 'Partial visibility' : 'Not visible'}>
+      {row.rating === 'best' ? '★' : row.rating === 'partial' ? '◑' : '✗'}
+    </span>
   </td>
   <td class="bar-cell">
     <NightBar {row} {timezone} {hovering} {barStartMin} {barEndMin} />
   </td>
   <td class="moon-cell">
     <div class="moon-inner">
-      <MoonPhaseIcon phaseAngle={row.moon.phaseAngle} size={16} />
+      <MoonPhaseIcon phaseAngle={row.moon.phaseAngle} size={16} illumination={row.moon.illumination} />
       {row.moon.illumination}%
     </div>
   </td>

@@ -1,13 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { validateCoords } from '../../src/web/utils/coords.js';
 
-// Unit-test the validation logic (no Svelte component rendering needed for bounds checks)
-function validateCoords(lat: number, lon: number): string | null {
-  if (isNaN(lat) || lat < -90 || lat > 90) return 'Latitude must be between -90 and 90';
-  if (isNaN(lon) || lon < -180 || lon > 180) return 'Longitude must be between -180 and 180';
-  return null;
-}
-
-describe('LocationPicker validation', () => {
+describe('validateCoords', () => {
   it('accepts valid coordinates', () => {
     expect(validateCoords(38.563, -8.882)).toBeNull();
     expect(validateCoords(0, 0)).toBeNull();
@@ -27,5 +21,12 @@ describe('LocationPicker validation', () => {
   it('rejects NaN values', () => {
     expect(validateCoords(NaN, 0)).toMatch(/Latitude/);
     expect(validateCoords(0, NaN)).toMatch(/Longitude/);
+  });
+
+  it('accepts boundary values', () => {
+    expect(validateCoords(90, 0)).toBeNull();
+    expect(validateCoords(-90, 0)).toBeNull();
+    expect(validateCoords(0, 180)).toBeNull();
+    expect(validateCoords(0, -180)).toBeNull();
   });
 });

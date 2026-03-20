@@ -20,9 +20,9 @@
   </section>
 
   <section class="stats">
-    <span class="best">★ {best} best</span>
-    <span class="partial">◑ {partial} partial</span>
-    <span class="none">✗ {rows.length - best - partial} not visible</span>
+    <span class="best" aria-label="{best} best nights">★ {best} best</span>
+    <span class="partial" aria-label="{partial} partial nights">◑ {partial} partial</span>
+    <span class="none" aria-label="{rows.length - best - partial} not visible nights">✗ {rows.length - best - partial} not visible</span>
   </section>
 
   <Legend />
