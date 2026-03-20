@@ -1,0 +1,35 @@
+{
+  "name": "milkyway-calendar",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "cli": "tsx src/cli/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "bin": {
+    "mwcal": "./src/cli/index.ts"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@testing-library/svelte": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/tz-lookup": "^6.1.2",
+    "jsdom": "^26.0.0",
+    "svelte": "^5.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "astronomy-engine": "^2.1.0",
+    "chalk": "^5.4.0",
+    "cli-table3": "^0.6.0",
+    "commander": "^13.0.0",
+    "tz-lookup": "^6.1.25"
+  }
+}

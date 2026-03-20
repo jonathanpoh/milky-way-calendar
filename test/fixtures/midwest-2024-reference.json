@@ -1,0 +1,34 @@
+[
+  {
+    "date": "2024-04-06",
+    "location": { "lat": 39.0, "lon": -104.0, "note": "Midwest USA approx, 39°N" },
+    "sunset_utc_approx": "01:30",
+    "astronomical_twilight_end_utc_approx": "03:30",
+    "moon_illumination_pct": 27,
+    "gc_visible": true,
+    "note": "Early April — GC just starting to rise in dark hours"
+  },
+  {
+    "date": "2024-06-22",
+    "location": { "lat": 39.0, "lon": -104.0 },
+    "sunset_utc_approx": "02:30",
+    "moon_illumination_pct": 90,
+    "gc_visible": true,
+    "note": "Summer solstice — short night but GC high, moon interference"
+  },
+  {
+    "date": "2024-08-03",
+    "location": { "lat": 39.0, "lon": -104.0 },
+    "moon_illumination_pct": 1,
+    "gc_visible": true,
+    "rating_expected": "best",
+    "note": "New moon + peak GC season"
+  },
+  {
+    "date": "2024-12-15",
+    "location": { "lat": 39.0, "lon": -104.0 },
+    "gc_visible": false,
+    "rating_expected": "not-visible",
+    "note": "Winter — GC below horizon during dark hours"
+  }
+]
