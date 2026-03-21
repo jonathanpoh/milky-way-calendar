@@ -3,6 +3,8 @@
   import { location } from '../stores/calendar.js';
   import type { Location } from '../../core/types.js';
   import { validateCoords } from '../utils/coords.js';
+  import { geoIPLocate, fetchPlaceSuggestions, fetchPlaceDetail } from '../utils/google-places.js';
+  import { PRESET_LOCATIONS } from '../utils/presets.js';
 
   const MAPS_KEY = import.meta.env.GOOGLE_MAPS_API_KEY;
   const COOKIE_NAME = 'mwcal_location';
@@ -62,16 +64,9 @@
   async function geoIPLoad() {
     if (!MAPS_KEY) return;
     try {
-      const res = await fetch(
-        `https://www.googleapis.com/geolocation/v1/geolocate?key=${MAPS_KEY}`,
-        { method: 'POST', body: '{}', headers: { 'Content-Type': 'application/json' } },
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      const lat: number = data.location?.lat;
-      const lon: number = data.location?.lng;
-      if (lat == null || lon == null) return;
-      await resolveLocation(lat, lon);
+      const result = await geoIPLocate(MAPS_KEY);
+      if (!result) return;
+      await resolveLocation(result.lat, result.lon);
     } catch { /* silent — keep default */ }
   }
 
@@ -123,17 +118,7 @@
     if (!MAPS_KEY) return;
     searchLoading = true;
     try {
-      const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': MAPS_KEY },
-        body: JSON.stringify({
-          input: searchQuery,
-          includedPrimaryTypes: ['locality', 'administrative_area_level_3'],
-          languageCode: 'en',
-        }),
-      });
-      const data = await res.json();
-      suggestions = data.suggestions ?? [];
+      suggestions = await fetchPlaceSuggestions(MAPS_KEY, searchQuery);
       showDropdown = suggestions.length > 0;
       activeIndex = -1;
     } catch { suggestions = []; showDropdown = false; }
@@ -146,14 +131,7 @@
     loading = true;
     error = '';
     try {
-      const res = await fetch(
-        `https://places.googleapis.com/v1/${s.placePrediction.place}?fields=location,displayName`,
-        { headers: { 'X-Goog-Api-Key': MAPS_KEY } },
-      );
-      const data = await res.json();
-      const lat = data.location?.latitude;
-      const lon = data.location?.longitude;
-      if (lat == null || lon == null) throw new Error();
+      const { lat, lon } = await fetchPlaceDetail(MAPS_KEY, s.placePrediction.place);
       await resolveLocation(lat, lon, s.placePrediction.text.text);
     } catch {
       error = 'Could not fetch location details';
@@ -181,6 +159,17 @@
     } else if (e.key === 'Escape') {
       dismissDropdown();
     }
+  }
+
+  function selectPreset(e: Event) {
+    const idx = parseInt((e.target as HTMLSelectElement).value);
+    if (isNaN(idx)) return;
+    const preset = PRESET_LOCATIONS[idx];
+    latInput = preset.lat.toFixed(4);
+    lonInput = preset.lon.toFixed(4);
+    resolvedName = preset.name ?? '';
+    saveCookie(preset);
+    location.set(preset);
   }
 
   async function applyInputs() {
@@ -216,47 +205,59 @@
       <input type="text" inputmode="decimal" bind:value={lonInput} />
     </label>
 
-    <div class="search-wrap">
+    {#if MAPS_KEY}
+      <div class="search-wrap">
+        <label>
+          Search city
+          <div class="search-input-wrap">
+            <input
+              type="text"
+              bind:value={searchQuery}
+              oninput={onSearchInput}
+              onkeydown={onSearchKeydown}
+              placeholder="e.g. Tokyo"
+              autocomplete="off"
+              role="combobox"
+              aria-expanded={showDropdown}
+              aria-autocomplete="list"
+              aria-controls="search-listbox"
+              aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
+            />
+            {#if searchLoading}<span class="spin">⟳</span>{/if}
+          </div>
+        </label>
+        {#if showDropdown}
+          <ul class="dropdown" role="listbox" id="search-listbox">
+            {#each suggestions as s, i}
+              <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+              <li
+                id="suggestion-{i}"
+                role="option"
+                aria-selected={i === activeIndex}
+                class:active={i === activeIndex}
+                onmousedown={() => selectSuggestion(s)}
+                onmouseenter={() => { activeIndex = i; }}
+              >
+                <span class="main">{s.placePrediction.structuredFormat.mainText.text}</span>
+                {#if s.placePrediction.structuredFormat.secondaryText}
+                  <span class="secondary">{s.placePrediction.structuredFormat.secondaryText.text}</span>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
+    {:else}
       <label>
-        Search city
-        <div class="search-input-wrap">
-          <input
-            type="text"
-            bind:value={searchQuery}
-            oninput={onSearchInput}
-            onkeydown={onSearchKeydown}
-            placeholder="e.g. Tokyo"
-            autocomplete="off"
-            role="combobox"
-            aria-expanded={showDropdown}
-            aria-autocomplete="list"
-            aria-controls="search-listbox"
-            aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
-          />
-          {#if searchLoading}<span class="spin">⟳</span>{/if}
-        </div>
-      </label>
-      {#if showDropdown}
-        <ul class="dropdown" role="listbox" id="search-listbox">
-          {#each suggestions as s, i}
-            <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-            <li
-              id="suggestion-{i}"
-              role="option"
-              aria-selected={i === activeIndex}
-              class:active={i === activeIndex}
-              onmousedown={() => selectSuggestion(s)}
-              onmouseenter={() => { activeIndex = i; }}
-            >
-              <span class="main">{s.placePrediction.structuredFormat.mainText.text}</span>
-              {#if s.placePrediction.structuredFormat.secondaryText}
-                <span class="secondary">{s.placePrediction.structuredFormat.secondaryText.text}</span>
-              {/if}
-            </li>
+        Preset location
+        <select onchange={selectPreset}>
+          <option value="">— choose a location —</option>
+          {#each PRESET_LOCATIONS as loc, i}
+            <option value={i}>{loc.name}</option>
           {/each}
-        </ul>
-      {/if}
-    </div>
+        </select>
+      </label>
+    {/if}
 
     <button class="action-btn" onclick={useMyLocation} disabled={loading}>
       📍 Use my location
@@ -304,6 +305,18 @@
   label:nth-child(2) input { width: 9rem; }
   .search-wrap input        { width: 14rem; }
   input:focus { outline: none; border-color: #89b4fa; }
+
+  select {
+    padding: 0.3rem 0.5rem;
+    background: #1e1e2e;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    color: #cdd6f4;
+    font-size: 0.9rem;
+    width: 18rem;
+    cursor: pointer;
+  }
+  select:focus { outline: none; border-color: #89b4fa; }
 
   .search-wrap { position: relative; }
   .search-input-wrap { position: relative; display: flex; align-items: center; }
