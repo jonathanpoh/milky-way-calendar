@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateCalendar } from '../../src/core/calendar.js';
-
-const PALMELA: import('../../src/core/types.js').Location = { lat: 38.563, lon: -8.882 };
+import { PALMELA, SYDNEY, TOKYO, DENVER } from '../fixtures/locations.js';
 
 describe('generateCalendar', () => {
   it('returns correct number of rows for a given interval', () => {
@@ -66,10 +65,45 @@ describe('generateCalendar', () => {
     expect(rows[0]!.rating).not.toBe('best');
   });
 
-  it('new moon peak-season nights are rated best', () => {
-    // Aug 3 2024 Denver: new moon + peak GC season
+  it('Sydney: southern-hemisphere winter (Jul) has more visible nights than summer (Jan)', () => {
+    const winter = generateCalendar({
+      location: SYDNEY,
+      startDate: new Date(Date.UTC(2026, 6, 1)),
+      endDate:   new Date(Date.UTC(2026, 6, 31)),
+      interval: 1,
+    });
+    const summer = generateCalendar({
+      location: SYDNEY,
+      startDate: new Date(Date.UTC(2026, 0, 1)),
+      endDate:   new Date(Date.UTC(2026, 0, 31)),
+      interval: 1,
+    });
+    const winterVisible = winter.filter(r => r.rating !== 'not-visible').length;
+    const summerVisible = summer.filter(r => r.rating !== 'not-visible').length;
+    expect(winterVisible).toBeGreaterThan(summerVisible);
+  });
+
+  it('Tokyo: summer (Jul) has MW visible nights, winter (Jan) has very few', () => {
+    const summer = generateCalendar({
+      location: TOKYO,
+      startDate: new Date(Date.UTC(2026, 6, 1)),
+      endDate:   new Date(Date.UTC(2026, 6, 31)),
+      interval: 1,
+    });
+    const winter = generateCalendar({
+      location: TOKYO,
+      startDate: new Date(Date.UTC(2026, 0, 1)),
+      endDate:   new Date(Date.UTC(2026, 0, 31)),
+      interval: 1,
+    });
+    const summerVisible = summer.filter(r => r.rating !== 'not-visible').length;
+    const winterVisible = winter.filter(r => r.rating !== 'not-visible').length;
+    expect(summerVisible).toBeGreaterThan(winterVisible);
+  });
+
+  it('new moon peak-season nights are rated best (Denver Aug 3 2024)', () => {
     const rows = generateCalendar({
-      location: { lat: 39.0, lon: -104.0 },
+      location: DENVER,
       startDate: new Date(Date.UTC(2024, 7, 3)),
       endDate: new Date(Date.UTC(2024, 7, 3)),
       interval: 1,

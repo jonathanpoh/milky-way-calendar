@@ -18,6 +18,9 @@
   const dateStr = $derived(new Intl.DateTimeFormat('en-GB', {
     month: 'short', day: '2-digit', timeZone: timezone,
   }).format(row.date));
+  const dayStr = $derived(new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long', timeZone: timezone,
+  }).format(row.date));
 </script>
 
 <tr
@@ -27,7 +30,10 @@
   onfocusin={() => hovering = true}
   onfocusout={() => hovering = false}
 >
-  <td class="date">{dateStr}</td>
+  <td class="date">
+    <span class="date-main">{dateStr}</span>
+    <span class="date-dow">{dayStr}</span>
+  </td>
   <td class="rating">
     <span aria-label={row.rating === 'best' ? 'Best visibility' : row.rating === 'partial' ? 'Partial visibility' : 'Not visible'}>
       {row.rating === 'best' ? '★' : row.rating === 'partial' ? '◑' : '✗'}
@@ -64,7 +70,9 @@
     font-variant-numeric: tabular-nums;
     vertical-align: middle;
   }
-  .date { font-weight: 600; min-width: 5rem; }
+  .date { font-weight: 600; min-width: 5rem; vertical-align: middle; }
+  .date-main { display: block; }
+  .date-dow { display: block; font-size: 0.72rem; font-weight: 400; opacity: 0.6; }
   .rating { text-align: center; }
   .bar-cell { width: 100%; padding: 0.15rem 0.5rem; }
   .moon-cell { vertical-align: middle; }
