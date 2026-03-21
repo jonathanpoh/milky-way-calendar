@@ -107,12 +107,11 @@
       aria-haspopup="listbox"
       aria-expanded={yearOpen}
       aria-controls="year-listbox"
-      aria-activedescendant={yearOpen && yearActiveIndex >= 0 ? `year-opt-${yearActiveIndex}` : undefined}
     >
       {$year}<span class="chevron" class:open={yearOpen}>▾</span>
     </button>
     {#if yearOpen}
-      <ul class="year-dropdown" id="year-listbox" role="listbox">
+      <ul class="year-dropdown" id="year-listbox" role="listbox" tabindex="-1" aria-activedescendant={yearActiveIndex >= 0 ? `year-opt-${yearActiveIndex}` : undefined}>
         {#each YEARS as y, i}
           <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
           <li

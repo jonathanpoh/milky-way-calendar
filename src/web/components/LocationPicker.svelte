@@ -227,6 +227,7 @@
             onkeydown={onSearchKeydown}
             placeholder="e.g. Tokyo"
             autocomplete="off"
+            role="combobox"
             aria-expanded={showDropdown}
             aria-autocomplete="list"
             aria-controls="search-listbox"
