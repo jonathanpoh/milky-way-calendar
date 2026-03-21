@@ -30,7 +30,6 @@ export async function fetchPlaceSuggestions(key: string, query: string): Promise
     headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': key },
     body: JSON.stringify({
       input: query,
-      includedPrimaryTypes: ['locality', 'administrative_area_level_3'],
       languageCode: 'en',
     }),
   });

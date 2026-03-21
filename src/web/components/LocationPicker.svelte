@@ -161,15 +161,45 @@
     }
   }
 
-  function selectPreset(e: Event) {
-    const idx = parseInt((e.target as HTMLSelectElement).value);
-    if (isNaN(idx)) return;
+  // ── Preset locations dropdown ────────────────────────────────────────────
+  let presetOpen        = $state(false);
+  let presetActiveIndex = $state(-1);
+  let selectedPresetIdx = $state(-1);
+
+  function selectPreset(idx: number) {
     const preset = PRESET_LOCATIONS[idx];
+    selectedPresetIdx = idx;
+    presetOpen = false;
+    presetActiveIndex = -1;
     latInput = preset.lat.toFixed(4);
     lonInput = preset.lon.toFixed(4);
     resolvedName = preset.name ?? '';
     saveCookie(preset);
     location.set(preset);
+  }
+
+  function onPresetKeydown(e: KeyboardEvent) {
+    if (!presetOpen) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        presetOpen = true;
+        presetActiveIndex = selectedPresetIdx;
+      }
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      presetActiveIndex = Math.min(presetActiveIndex + 1, PRESET_LOCATIONS.length - 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      presetActiveIndex = Math.max(presetActiveIndex - 1, 0);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (presetActiveIndex >= 0) selectPreset(presetActiveIndex);
+    } else if (e.key === 'Escape' || e.key === 'Tab') {
+      presetOpen = false;
+      presetActiveIndex = -1;
+    }
   }
 
   async function applyInputs() {
@@ -194,7 +224,10 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="location-picker" onmousedown={(e) => { if (!(e.target as Element).closest('.search-wrap')) dismissDropdown(); }}>
+<div class="location-picker" onmousedown={(e) => {
+  if (!(e.target as Element).closest('.search-wrap')) dismissDropdown();
+  if (!(e.target as Element).closest('.preset-wrap')) { presetOpen = false; presetActiveIndex = -1; }
+}}>
   <div class="inputs">
     <label>
       Latitude
@@ -208,7 +241,7 @@
     {#if MAPS_KEY}
       <div class="search-wrap">
         <label>
-          Search city
+          Search place
           <div class="search-input-wrap">
             <input
               type="text"
@@ -248,15 +281,37 @@
         {/if}
       </div>
     {:else}
-      <label>
-        Preset location
-        <select onchange={selectPreset}>
-          <option value="">— choose a location —</option>
-          {#each PRESET_LOCATIONS as loc, i}
-            <option value={i}>{loc.name}</option>
-          {/each}
-        </select>
-      </label>
+      <div class="preset-wrap">
+        <span class="preset-label">Location</span>
+        <button
+          class="preset-btn"
+          onclick={() => { presetOpen = !presetOpen; if (presetOpen) presetActiveIndex = selectedPresetIdx; }}
+          onkeydown={onPresetKeydown}
+          aria-haspopup="listbox"
+          aria-expanded={presetOpen}
+          aria-controls="preset-listbox"
+        >
+          {selectedPresetIdx >= 0 ? PRESET_LOCATIONS[selectedPresetIdx].name : '— choose a location —'}
+          <span class="chevron" class:open={presetOpen}>▾</span>
+        </button>
+        {#if presetOpen}
+          <ul class="preset-dropdown" id="preset-listbox" role="listbox" tabindex="-1"
+            aria-activedescendant={presetActiveIndex >= 0 ? `preset-opt-${presetActiveIndex}` : undefined}>
+            {#each PRESET_LOCATIONS as loc, i}
+              <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+              <li
+                id="preset-opt-{i}"
+                role="option"
+                aria-selected={i === selectedPresetIdx}
+                class:selected={i === selectedPresetIdx}
+                class:active={i === presetActiveIndex}
+                onmousedown={() => selectPreset(i)}
+                onmouseenter={() => { presetActiveIndex = i; }}
+              >{loc.name}</li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
     {/if}
 
     <button class="action-btn" onclick={useMyLocation} disabled={loading}>
@@ -306,17 +361,70 @@
   .search-wrap input        { width: 14rem; }
   input:focus { outline: none; border-color: #89b4fa; }
 
-  select {
-    padding: 0.3rem 0.5rem;
+  .preset-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .preset-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #89b4fa;
+  }
+
+  .preset-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.6rem;
+    background: #1e1e2e;
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    color: #cdd6f4;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+    min-width: 20rem;
+    justify-content: space-between;
+  }
+  .preset-btn:hover { background: #313244; border-color: #6c7086; }
+
+  .chevron {
+    font-size: 1rem;
+    color: #6c7086;
+    transition: transform 0.15s;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .chevron.open { transform: rotate(180deg); }
+
+  .preset-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 100%;
     background: #1e1e2e;
     border: 1px solid #45475a;
     border-radius: 4px;
+    margin: 0;
+    padding: 0.25rem 0;
+    list-style: none;
+    z-index: 200;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    max-height: 16rem;
+    overflow-y: auto;
+  }
+  .preset-dropdown li {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.85rem;
     color: #cdd6f4;
-    font-size: 0.9rem;
-    width: 18rem;
     cursor: pointer;
   }
-  select:focus { outline: none; border-color: #89b4fa; }
+  .preset-dropdown li:hover, .preset-dropdown li.active { background: #313244; }
+  .preset-dropdown li.selected { color: #89b4fa; font-weight: 600; }
 
   .search-wrap { position: relative; }
   .search-input-wrap { position: relative; display: flex; align-items: center; }
