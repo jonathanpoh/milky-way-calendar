@@ -2,7 +2,7 @@
 
 An interactive planning tool for landscape astrophotography sessions. Calculates Milky Way (galactic center) visibility, moon interference, and sky darkness for any location and date range — inspired by the [Capture the Atlas](https://capturetheatlas.com) PDF calendars.
 
-Available as both a **web app** (Svelte, runs entirely in the browser) and a **CLI tool**.
+Available as a **web app** (Svelte, runs entirely in the browser). A CLI tool is also in progress.
 
 ## Features
 
@@ -36,7 +36,9 @@ Enable the following APIs for the key in Google Cloud Console:
 - Places API (New)
 - Geolocation API
 
-## CLI
+## CLI ⚠️ Work in Progress
+
+> The CLI is functional but still being polished — output formatting may change.
 
 ```bash
 npm run cli -- --lat 38.18 --lon -7.59 --name "Alqueva, Portugal" --year 2026
@@ -75,7 +77,7 @@ src/
     sun.ts
     milky-way.ts
     scoring.ts
-  cli/            # terminal table renderer
+  cli/            # terminal table renderer (WIP)
   web/            # Svelte app
     components/
     stores/
