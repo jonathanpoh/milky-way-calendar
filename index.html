@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Milky Way Calendar — Astrophotography Planner</title>
     <meta name="description" content="Plan your Milky Way astrophotography sessions with precision. See galactic core rise and set times, moon phase, and darkness windows for any location and date. Free night sky planner." />
-    <meta name="keywords" content="milky way calendar, milky way planner, astrophotography planner, milky way visibility, galactic core rise time, best time to see the milky way, milky way season 2025 2026 2027, moon phase calendar, night sky planner, dark sky locations, astrophotography calendar, when to see the milky way, galactic center, astro planner" />
     <meta name="author" content="Milky Way Calendar" />
     <meta name="robots" content="index, follow" />
 
@@ -23,6 +22,25 @@
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌌</text></svg>" />
     
+    <link rel="stylesheet" href="/about.css" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Milky Way Calendar",
+      "description": "Free browser-based astrophotography planner showing Milky Way visibility, galactic core rise and set times, moon phase, and darkness windows for any location.",
+      "url": "https://milkyway.jonathanpoh.photography/",
+      "applicationCategory": "Photography",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
     <!-- Privacy-friendly analytics by Plausible -->
     <script async src="https://plausible.io/js/pa-U5hUlMj_8mTbJTMoOvgok.js"></script>
     <script>
@@ -33,5 +51,36 @@
   <body>
     <div id="app"></div>
     <script type="module" src="/src/web/main.ts"></script>
+
+    <section id="about">
+      <h1>Milky Way Calendar — Astrophotography Planner</h1>
+      <p>Planning a Milky Way session comes down to a handful of variables arriving at once: the Galactic Centre needs to be above the horizon, the moon needs to be out of the way, and ideally there's a decent window of darkness between those two things and the start of morning twilight. This free planner shows you exactly that — for any location, any month.</p>
+      <p>No sign-up, no account. Enter a location above and get a full month of nights, colour-coded by shooting quality. All calculations run in your browser; no data leaves your device.</p>
+
+      <h2>How to read the calendar</h2>
+      <p>Each row is a single night. The night bar has three horizontal lanes.</p>
+      <p>The top lane shows Milky Way and Galactic Centre visibility using three shades of green. Bright green means the GC is clearly above 10° altitude with no moon interference — the prime shooting window. Mid green means the GC is above the horizon but below 10°, or a moon-free portion of a longer window. Dark green means the GC is visible but the moon is above the horizon and interfering. No colour means the core is below the horizon entirely.</p>
+      <p>The middle lane shows sky darkness: a near-black strip of astronomical night with twilight gradients on each side. The bottom lane shows the moon — a gold bar when the moon is above the horizon, brighter when illumination is higher.</p>
+      <p>The rating icon on the left of each row summarises the night at a glance: ★ (best) means at least 2 hours of GC above 10° with low moon interference; ◑ (partial) means the Milky Way is visible but conditions are limited; ✗ (not visible) means the Galactic Centre is below the horizon during darkness.</p>
+      <p>The right-hand columns show moon phase and illumination percentage, the Milky Way window in hours with the GC-clear sub-window where applicable (e.g. "4h / 2h30m"), and the Galactic Centre's position label for the night.</p>
+
+      <h2>Frequently Asked Questions</h2>
+      <dl>
+        <dt>When is Milky Way season?</dt>
+        <dd>The Galactic Centre is visible in the night sky from roughly late February to early November in the northern hemisphere, with peak season running April through September. In the southern hemisphere it is visible for most of the year, with the best conditions from March to October. The core is highest in the sky around June–August at northern mid-latitudes.</dd>
+
+        <dt>When does the galactic core rise and set?</dt>
+        <dd>Rise and set times depend entirely on your latitude and the time of year. Use the planner above: enter your location and the calendar shows the Galactic Centre's window for every night of the month.</dd>
+
+        <dt>What do the colours mean — bright green, mid green, dark green, gold?</dt>
+        <dd>Bright green: the Galactic Centre is clearly above 10° altitude with no moon interference — the prime shooting window. Mid green: the GC is above the horizon but low (below 10°), or visible in a moon-free portion of a longer window. Dark green: the GC is visible but the moon is up and affecting contrast. Gold (bottom lane): the moon is above the horizon; brighter gold means higher illumination. Rows are also rated ★ best, ◑ partial, or ✗ not visible.</dd>
+
+        <dt>What's the best time of night to photograph the Milky Way?</dt>
+        <dd>During astronomical darkness, with the Galactic Centre as high as possible above the horizon. In practice this is often between midnight and 3 am during peak season, though it shifts by location and month. The coloured bar on each row shows exactly which hours qualify.</dd>
+
+        <dt>Do I still need to check the weather?</dt>
+        <dd>Yes — this tool shows astronomical conditions only (moon phase, galactic core position, darkness windows). It has no weather data. Always check a dedicated sky forecast before heading out; Clear Outside and Meteoblue are both good options for astrophotographers.</dd>
+      </dl>
+    </section>
   </body>
 </html>

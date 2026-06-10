@@ -1,0 +1,48 @@
+#about {
+  max-width: 900px;
+  margin: 3rem auto 4rem;
+  padding: 0 1rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: #cdd6f4;
+  border-top: 1px solid #1e1e2e;
+  padding-top: 2rem;
+}
+
+#about h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  color: #cdd6f4;
+}
+
+#about h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 2rem 0 0.6rem;
+  color: #cdd6f4;
+}
+
+#about p {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #a6adc8;
+}
+
+#about dl {
+  margin: 0;
+}
+
+#about dt {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #a6e3a1;
+  margin-top: 1.25rem;
+}
+
+#about dd {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #a6adc8;
+  margin: 0.25rem 0 0 0;
+}
