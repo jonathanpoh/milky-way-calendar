@@ -1,0 +1,117 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #11111b;
+  color: #cdd6f4;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ── Static site header ─────────────────────────────────────────────────── */
+
+#site-header {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 0;
+}
+
+#site-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.8rem;
+  color: #cdd6f4;
+}
+
+#site-header .subtitle {
+  margin: 0;
+  color: #a6adc8;
+  font-size: 0.9rem;
+}
+
+/* ── Static site footer ─────────────────────────────────────────────────── */
+
+#site-footer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#site-footer .copy {
+  font-size: 0.75rem;
+  color: #45475a;
+  letter-spacing: 0.03em;
+}
+
+#site-footer .copy a {
+  color: #585b70;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+#site-footer .copy a:hover { color: #a6adc8; }
+
+#site-footer .gh-link {
+  display: flex;
+  align-items: center;
+  color: #45475a;
+  transition: color 0.15s;
+}
+
+#site-footer .gh-link:hover { color: #89b4fa; }
+
+#site-footer .gh-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── About section ──────────────────────────────────────────────────────── */
+
+#about {
+  max-width: 900px;
+  margin: 3rem auto 0;
+  padding: 2rem 1rem 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: #cdd6f4;
+  border-top: 1px solid #1e1e2e;
+}
+
+#about h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  color: #cdd6f4;
+}
+
+#about h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 2rem 0 0.6rem;
+  color: #cdd6f4;
+}
+
+#about p {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #a6adc8;
+}
+
+#about dl {
+  margin: 0;
+}
+
+#about dt {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #a6e3a1;
+  margin-top: 1.25rem;
+}
+
+#about dd {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #a6adc8;
+  margin: 0.25rem 0 0 0;
+}
