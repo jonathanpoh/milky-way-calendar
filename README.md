@@ -40,7 +40,9 @@ Enable the following APIs for the key in Google Cloud Console:
 - Places API (New)
 - Geolocation API
 
-## CLI
+## CLI ⚠️ Work in Progress
+
+> The CLI is functional but still being polished — output formatting may change.
 
 ```bash
 npm run cli -- --lat 38.18 --lon -7.59 --name "Alqueva, Portugal" --year 2026
