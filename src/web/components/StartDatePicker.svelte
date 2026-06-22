@@ -15,12 +15,14 @@
   let grid = $state<HTMLElement>();
   let trigger = $state<HTMLButtonElement>();
 
-  // Month shown in the popover + the roving-focus day (only meaningful while open).
-  let viewYear = $state(value.getUTCFullYear());
-  let viewMonth = $state(value.getUTCMonth());
-  let focusDate = $state<Date>(value);
-
   const today = todayUTC();
+
+  // Popover view state + roving-focus day (only used while open). openPicker()
+  // re-syncs these to the current `value` each time the popover opens, so they
+  // start from a neutral default rather than capturing the prop directly.
+  let viewYear = $state(today.getUTCFullYear());
+  let viewMonth = $state(today.getUTCMonth());
+  let focusDate = $state<Date>(today);
 
   function iso(d: Date): string { return d.toISOString().slice(0, 10); }
   function sameDay(a: Date, b: Date): boolean {
