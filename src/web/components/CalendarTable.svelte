@@ -3,7 +3,7 @@
   import Row from './CalendarRow.svelte';
   import { location, year } from '../stores/calendar.js';
 
-  const YEARS = [2025,2026,2027,2028,2029,2030,2031,2032,2033,2034];
+  const YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 1 + i);
 
   interface Props { rows: CalendarRow[]; }
   let { rows }: Props = $props();

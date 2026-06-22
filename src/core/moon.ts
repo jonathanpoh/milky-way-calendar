@@ -25,7 +25,8 @@ export function getMoonData(location: Location, date: Date): MoonData {
   // regardless of timezone. UTC noon fails for eastern zones (UTC+9 etc.)
   // where noon UTC falls after local sunset, missing same-day moon events.
   const noonUTC = localNoonUTC(date, location.timezone);
-  const nextMidnight = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1));
+  // Local next midnight = local noon + 12h
+  const localNextMidnight = new Date(noonUTC.getTime() + 12 * 3600_000);
 
   // Moonrise: first rise after noon UTC
   let moonriseNextDay = false;
@@ -33,7 +34,7 @@ export function getMoonData(location: Location, date: Date): MoonData {
   const mrResult = A.SearchRiseSet(A.Body.Moon, observer, +1, noonUTC, 2, 0);
   if (mrResult) {
     moonrise = mrResult.date;
-    moonriseNextDay = moonrise >= nextMidnight;
+    moonriseNextDay = moonrise >= localNextMidnight;
   }
 
   // Moonset: first set after noon UTC
@@ -42,7 +43,7 @@ export function getMoonData(location: Location, date: Date): MoonData {
   const msResult = A.SearchRiseSet(A.Body.Moon, observer, -1, noonUTC, 2, 0);
   if (msResult) {
     moonset = msResult.date;
-    moonsetNextDay = moonset >= nextMidnight;
+    moonsetNextDay = moonset >= localNextMidnight;
   }
 
   // Illumination and phase at noon UTC

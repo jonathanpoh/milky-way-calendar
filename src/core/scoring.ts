@@ -19,6 +19,10 @@ export function scoreNight(
   // This bypasses moonrise/moonset timing bugs and handles edge cases correctly.
   const moonFrac = moonAboveHorizonFraction(location, checkWindow);
 
+  // Bright moon dominating the window → not practically shootable.
+  const washout = moon.illumination >= 60 && moonFrac >= 0.75;
+  if (washout) return 'not-visible';
+
   // "Best" requires:
   //   - At least 2 hours of GC clearly above 10° (proper shooting time)
   //   - Low moon interference: dim moon (<25%) OR moon below horizon for >75% of the window

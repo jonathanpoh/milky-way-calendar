@@ -35,8 +35,8 @@ describe('CalendarTable data (integration)', () => {
     });
     for (const row of rows) {
       if (row.mwWindow) {
-        expect(row.mwWindow.start.getTime()).toBeGreaterThanOrEqual(row.sun.twilightEnd.getTime() - 60_000);
-        expect(row.mwWindow.end.getTime()).toBeLessThanOrEqual(row.sun.twilightStart.getTime() + 60_000);
+        expect(row.mwWindow.start.getTime()).toBeGreaterThanOrEqual(row.sun.twilightEnd!.getTime() - 60_000);
+        expect(row.mwWindow.end.getTime()).toBeLessThanOrEqual(row.sun.twilightStart!.getTime() + 60_000);
       }
     }
   });
@@ -53,8 +53,8 @@ describe('CalendarTable data — Sydney and Tokyo integration', () => {
     expect(rows).toHaveLength(31);
     for (const row of rows) {
       if (row.mwWindow) {
-        expect(row.mwWindow.start.getTime()).toBeGreaterThanOrEqual(row.sun.twilightEnd.getTime() - 60_000);
-        expect(row.mwWindow.end.getTime()).toBeLessThanOrEqual(row.sun.twilightStart.getTime() + 60_000);
+        expect(row.mwWindow.start.getTime()).toBeGreaterThanOrEqual(row.sun.twilightEnd!.getTime() - 60_000);
+        expect(row.mwWindow.end.getTime()).toBeLessThanOrEqual(row.sun.twilightStart!.getTime() + 60_000);
       }
     }
   });
@@ -70,8 +70,8 @@ describe('CalendarTable data — Sydney and Tokyo integration', () => {
     for (const row of rows) {
       expect(['best', 'partial', 'not-visible']).toContain(row.rating);
       if (row.mwWindow) {
-        expect(row.mwWindow.start.getTime()).toBeGreaterThanOrEqual(row.sun.twilightEnd.getTime() - 60_000);
-        expect(row.mwWindow.end.getTime()).toBeLessThanOrEqual(row.sun.twilightStart.getTime() + 60_000);
+        expect(row.mwWindow.start.getTime()).toBeGreaterThanOrEqual(row.sun.twilightEnd!.getTime() - 60_000);
+        expect(row.mwWindow.end.getTime()).toBeLessThanOrEqual(row.sun.twilightStart!.getTime() + 60_000);
       }
     }
   });

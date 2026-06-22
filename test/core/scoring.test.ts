@@ -99,4 +99,34 @@ describe('scoreNight', () => {
     // clearHours is 0 (no gcClearWindow), so never 'best' via clearHours >= 2
     expect(scoreNight(PALMELA, makeWindow(2), null, makeMoon(80))).toBe('partial');
   });
+
+  it('washout: bright moon (90%) up most of window (90%) → not-visible', () => {
+    mockMoonFrac.mockReturnValue(0.9);
+    const gc = makeWindow(3);
+    expect(scoreNight(PALMELA, makeWindow(4), gc, makeMoon(90))).toBe('not-visible');
+  });
+
+  it('washout boundary: illumination 60 + moonFrac 0.75 → not-visible', () => {
+    mockMoonFrac.mockReturnValue(0.75);
+    const gc = makeWindow(3);
+    expect(scoreNight(PALMELA, makeWindow(4), gc, makeMoon(60))).toBe('not-visible');
+  });
+
+  it('washout boundary: illumination 59 + moonFrac 0.75 → still partial', () => {
+    mockMoonFrac.mockReturnValue(0.75);
+    const gc = makeWindow(3);
+    expect(scoreNight(PALMELA, makeWindow(4), gc, makeMoon(59))).toBe('partial');
+  });
+
+  it('washout boundary: illumination 60 + moonFrac 0.74 → still partial', () => {
+    mockMoonFrac.mockReturnValue(0.74);
+    const gc = makeWindow(3);
+    expect(scoreNight(PALMELA, makeWindow(4), gc, makeMoon(60))).toBe('partial');
+  });
+
+  it('washout trumps best: clearHours >= 2 but bright moon dominates', () => {
+    mockMoonFrac.mockReturnValue(0.8);
+    const gc = makeWindow(3);
+    expect(scoreNight(PALMELA, makeWindow(4), gc, makeMoon(95))).toBe('not-visible');
+  });
 });

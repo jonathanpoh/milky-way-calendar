@@ -57,13 +57,24 @@
     return ((localMinSinceNoon(date) - barStartMin) / barRangeMin) * 100;
   }
 
-  const moonriseRaw = $derived(rawPct(row.moon.moonrise));
-  const moonsetRaw  = $derived(rawPct(row.moon.moonset));
+  // Discard moon events outside this bar's ~24h window (noon to next noon).
+  // getMoonData searches a 2-day window, so events 26h+ out wrap to the same
+  // clock time and paint a phantom span. Use sunset/sunrise as anchors: valid
+  // events fall within ~18h of either bound.
+  function inBarWindow(date: Date | null): Date | null {
+    if (!date) return null;
+    const t = date.getTime();
+    const ref = row.sun.sunset.getTime();
+    return Math.abs(t - ref) < 24 * 3600_000 ? date : null;
+  }
+
+  const moonriseRaw = $derived(rawPct(inBarWindow(row.moon.moonrise)));
+  const moonsetRaw  = $derived(rawPct(inBarWindow(row.moon.moonset)));
 
   interface MoonSpan { left: number; right: number; }
 
   const moonSpans = $derived.by((): MoonSpan[] => {
-    if (row.moon.moonrise === null && row.moon.moonset === null) return [];
+    if (inBarWindow(row.moon.moonrise) === null && inBarWindow(row.moon.moonset) === null) return [];
     const r = moonriseRaw;
     const s = moonsetRaw;
     const upAtStart = r === null || r <= 0;   // moon already up at bar start
@@ -286,9 +297,11 @@
         >{lbl.text}</span>
       {/each}
       <!-- Night label: centered in the astronomical darkness window -->
-      <span class="lbl-inside dark night-label"
-        style="left:{(twilightEndPct + twilightStartPct) / 2}%; transform:translateX(-50%) translateY(-50%);"
-      >Night</span>
+      {#if row.sun.darkWindow}
+        <span class="lbl-inside dark night-label"
+          style="left:{(twilightEndPct + twilightStartPct) / 2}%; transform:translateX(-50%) translateY(-50%);"
+        >Night</span>
+      {/if}
     </div>
 
     <!-- Lane 3 (bottom, thin): Moon -->

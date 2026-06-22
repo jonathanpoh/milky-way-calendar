@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { getMwWindows, moonAboveHorizonFraction } from '../../src/core/milky-way.js';
 import { getSunData } from '../../src/core/sun.js';
 import { getGalacticCenterData } from '../../src/core/galactic-center.js';
-import { PALMELA, SYDNEY, TOKYO, DENVER } from '../fixtures/locations.js';
+import { PALMELA, SYDNEY, TOKYO, DENVER, ABISKO } from '../fixtures/locations.js';
 
 describe('getMwWindows — Palmela, Portugal', () => {
   it('returns a MW window in summer (GC visible during dark hours)', () => {
@@ -19,7 +19,7 @@ describe('getMwWindows — Palmela, Portugal', () => {
     const sun = getSunData(PALMELA, date);
     const gc = getGalacticCenterData(PALMELA, date);
     const { mwWindow } = getMwWindows(PALMELA, sun, gc);
-    expect(mwWindow!.durationHours).toBeLessThanOrEqual(sun.darkWindow.durationHours + 0.1);
+    expect(mwWindow!.durationHours).toBeLessThanOrEqual(sun.darkWindow!.durationHours + 0.1);
   });
 
   it('gcClearWindow is null or <= mwWindow', () => {
@@ -73,8 +73,8 @@ describe('getMwWindows — Tokyo regression (UTC+9)', () => {
       const gc  = getGalacticCenterData(TOKYO, date);
       const { mwWindow } = getMwWindows(TOKYO, sun, gc);
       if (mwWindow) {
-        expect(mwWindow.start.getTime()).toBeGreaterThanOrEqual(sun.darkWindow.start.getTime() - 1000);
-        expect(mwWindow.end.getTime()).toBeLessThanOrEqual(sun.darkWindow.end.getTime() + 1000);
+        expect(mwWindow.start.getTime()).toBeGreaterThanOrEqual(sun.darkWindow!.start.getTime() - 1000);
+        expect(mwWindow.end.getTime()).toBeLessThanOrEqual(sun.darkWindow!.end.getTime() + 1000);
       }
     }
   });
@@ -109,8 +109,8 @@ describe('getMwWindows — Sydney regression (UTC+10/+11)', () => {
       const gc  = getGalacticCenterData(SYDNEY, date);
       const { mwWindow } = getMwWindows(SYDNEY, sun, gc);
       if (mwWindow) {
-        expect(mwWindow.start.getTime()).toBeGreaterThanOrEqual(sun.darkWindow.start.getTime() - 1000);
-        expect(mwWindow.end.getTime()).toBeLessThanOrEqual(sun.darkWindow.end.getTime() + 1000);
+        expect(mwWindow.start.getTime()).toBeGreaterThanOrEqual(sun.darkWindow!.start.getTime() - 1000);
+        expect(mwWindow.end.getTime()).toBeLessThanOrEqual(sun.darkWindow!.end.getTime() + 1000);
       }
     }
   });
@@ -155,7 +155,27 @@ describe('moonAboveHorizonFraction', () => {
 
   it('returns near 0 around new moon (Jan 18 2026)', () => {
     const sun = getSunData(PALMELA, new Date(Date.UTC(2026, 0, 18)));
-    const frac = moonAboveHorizonFraction(PALMELA, sun.darkWindow);
+    const frac = moonAboveHorizonFraction(PALMELA, sun.darkWindow!);
     expect(frac).toBeLessThan(0.3);
+  });
+});
+
+describe('getMwWindows — high latitude (Abisko)', () => {
+  it('Jan 15 — GC never rises at 68°N, mwWindow is null', () => {
+    const date = new Date(Date.UTC(2026, 0, 15));
+    const sun = getSunData(ABISKO, date);
+    const gc = getGalacticCenterData(ABISKO, date);
+    const { mwWindow } = getMwWindows(ABISKO, sun, gc);
+    expect(mwWindow).toBeNull();
+  });
+
+  it('winter months — no MW window (GC always below horizon)', () => {
+    for (const month of [0, 1, 10, 11]) {
+      const date = new Date(Date.UTC(2026, month, 15));
+      const sun = getSunData(ABISKO, date);
+      const gc = getGalacticCenterData(ABISKO, date);
+      const { mwWindow } = getMwWindows(ABISKO, sun, gc);
+      expect(mwWindow).toBeNull();
+    }
   });
 });
