@@ -11,10 +11,17 @@ export interface TimeWindow {
   durationHours: number;
 }
 
+// 'normal'      — sun rises and sets on this date.
+// 'polar-day'   — midnight sun: sun never sets (no sunset/sunrise, no darkness).
+// 'polar-night' — polar night: sun never rises (no sunset/sunrise), but a real
+//                 twilight/dark cycle still brackets local midnight.
+export type SunRegime = 'normal' | 'polar-day' | 'polar-night';
+
 export interface SunData {
   date: Date;
-  sunset: Date;
-  sunrise: Date;
+  sunset: Date | null;        // null during polar day/night (no horizon crossing)
+  sunrise: Date | null;       // null during polar day/night (no horizon crossing)
+  regime: SunRegime;
   twilightEnd: Date | null;   // astronomical twilight end (evening, sun at -18°) — null during white nights
   twilightStart: Date | null; // astronomical twilight start (morning, sun at -18°) — null during white nights
   darkWindow: TimeWindow | null; // twilightEnd → twilightStart — null when sun never reaches -18°
