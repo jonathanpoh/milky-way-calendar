@@ -1,6 +1,6 @@
 # Milky Way Calendar
 
-An interactive planning tool for landscape astrophotography sessions. Calculates Milky Way (galactic center) visibility, moon interference, and sky darkness for any location and date range — inspired by the [Capture the Atlas](https://capturetheatlas.com) PDF calendars.
+An interactive planning tool for landscape astrophotography sessions. Calculates Milky Way (galactic center) visibility, moon interference, and sky darkness for any location and date range.
 
 Available as a **web app** (Svelte, runs entirely in the browser). A CLI tool is also in progress.
 
