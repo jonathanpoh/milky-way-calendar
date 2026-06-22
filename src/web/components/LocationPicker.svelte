@@ -1,82 +1,21 @@
 <script lang="ts">
-  import tzlookup from 'tz-lookup';
   import { location } from '../stores/calendar.js';
-  import type { Location } from '../../core/types.js';
   import { validateCoords } from '../utils/coords.js';
-  import { geoIPLocate, fetchPlaceSuggestions, fetchPlaceDetail } from '../utils/google-places.js';
+  import { fetchPlaceSuggestions, fetchPlaceDetail } from '../utils/google-places.js';
   import { PRESET_LOCATIONS } from '../utils/presets.js';
+  import { resolveLocation as resolveLocationData, saveCookie } from '../utils/location.js';
 
   const MAPS_KEY = import.meta.env.GOOGLE_MAPS_API_KEY;
-  const COOKIE_NAME = 'mwcal_location';
 
-  // ── Cookie helpers ───────────────────────────────────────────────────────
-  function saveCookie(loc: Location) {
-    const value = encodeURIComponent(JSON.stringify({
-      lat: loc.lat, lon: loc.lon, name: loc.name, timezone: loc.timezone,
-    }));
-    document.cookie = `${COOKIE_NAME}=${value}; max-age=${60 * 60 * 24 * 365}; path=/; SameSite=Lax`;
-  }
-
-  function loadCookie(): Location | null {
-    const match = document.cookie.split('; ').find(r => r.startsWith(COOKIE_NAME + '='));
-    if (!match) return null;
-    try {
-      const parsed = JSON.parse(decodeURIComponent(match.split('=').slice(1).join('=')));
-      if (!parsed || typeof parsed !== 'object') return null;
-      if (
-        typeof parsed.lat !== 'number' || !Number.isFinite(parsed.lat) ||
-        typeof parsed.lon !== 'number' || !Number.isFinite(parsed.lon) ||
-        parsed.lat < -90 || parsed.lat > 90 ||
-        parsed.lon < -180 || parsed.lon > 180
-      ) return null;
-      if (parsed.timezone != null && typeof parsed.timezone !== 'string') return null;
-      return parsed;
-    } catch { return null; }
-  }
-
-  // ── Resolve timezone + display name ─────────────────────────────────────
+  // ── Resolve timezone + display name, then publish to the store ───────────
+  // Location initialisation (URL → cookie → GeoIP → default) lives in url-sync.ts.
   async function resolveLocation(lat: number, lon: number, knownName?: string): Promise<void> {
     loading = true;
     error = '';
-    let timezone: string;
-    try {
-      timezone = tzlookup(lat, lon) ?? 'UTC';
-    } catch {
-      timezone = 'UTC';
-    }
-    let name = knownName ?? `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
-    if (!knownName) {
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`,
-          { headers: { 'Accept-Language': 'en' } },
-        );
-        if (res.ok) {
-          const data = await res.json();
-          const addr = data.address ?? {};
-          const city = addr.city ?? addr.town ?? addr.village ?? addr.county ?? '';
-          const country = addr.country ?? '';
-          name = [city, country].filter(Boolean).join(', ') || name;
-        }
-      } catch { /* keep coordinate fallback */ }
-    }
-    const loc: Location = { lat, lon, name, timezone };
-    resolvedName = name;
-    latInput = lat.toFixed(4);
-    lonInput = lon.toFixed(4);
+    const loc = await resolveLocationData(lat, lon, knownName);
     loading = false;
     saveCookie(loc);
     location.set(loc);
-  }
-
-  // ── GeoIP on initial load ────────────────────────────────────────────────
-  async function geoIPLoad() {
-    if (!MAPS_KEY) return;
-    try {
-      const result = await geoIPLocate(MAPS_KEY);
-      if (!result) return;
-      await resolveLocation(result.lat, result.lon);
-    } catch { /* silent — keep default */ }
   }
 
   // ── Reactive UI state ────────────────────────────────────────────────────
@@ -84,16 +23,15 @@
   let lonInput     = $state($location.lon.toFixed(4));
   let resolvedName = $state($location.name ?? '');
 
-  // ── Initialise: cookie → GeoIP → default ────────────────────────────────
-  const saved = loadCookie();
-  if (saved) {
-    location.set(saved);
-    latInput     = saved.lat.toFixed(4);
-    lonInput     = saved.lon.toFixed(4);
-    resolvedName = saved.name ?? '';
-  } else {
-    geoIPLoad();
-  }
+  // Reflect external location changes (URL restore, back/forward) in the inputs.
+  // The store only changes on commit, never while the user is typing, so this
+  // never clobbers in-progress edits.
+  $effect(() => {
+    latInput = $location.lat.toFixed(4);
+    lonInput = $location.lon.toFixed(4);
+    resolvedName = $location.name ?? '';
+  });
+
   let searchQuery  = $state('');
   let suggestions  = $state<Suggestion[]>([]);
   let showDropdown = $state(false);

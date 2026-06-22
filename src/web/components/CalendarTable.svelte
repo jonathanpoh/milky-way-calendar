@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { CalendarRow } from '../../core/types.js';
   import Row from './CalendarRow.svelte';
-  import { location, year } from '../stores/calendar.js';
+  import { location, year, startDate, todayUTC } from '../stores/calendar.js';
 
   const YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 1 + i);
 
@@ -10,45 +10,51 @@
 
   const tz = $derived($location.timezone ?? 'UTC');
 
-  // ── Month filter ────────────────────────────────────────────────────────────
-  const currentYear  = new Date().getFullYear();
-  const currentMonth = new Date().getUTCMonth();
-  let selectedMonth = $state<number>(currentMonth);
+  const WINDOW_DAYS = 30;
+  const currentYear = new Date().getFullYear();
 
-  // Derive the set of months that actually appear in the rows.
+  // The start date (a shared store, kept in the URL) drives the view: the table
+  // shows the next WINDOW_DAYS nights from here, crossing month boundaries.
+  const visibleRows = $derived(
+    rows.filter(r => r.date.getTime() >= $startDate.getTime()).slice(0, WINDOW_DAYS)
+  );
+
+  // ── Month filter ────────────────────────────────────────────────────────────
+  const activeMonth = $derived($startDate.getUTCMonth());
+
+  // Months that actually appear in the rows (for the pill bar).
   const months = $derived.by(() => {
-    const seen = new Map<number, { label: string; best: number; partial: number; total: number }>();
+    const seen = new Map<number, string>();
     for (const row of rows) {
       const m = row.date.getUTCMonth();
       if (!seen.has(m)) {
-        seen.set(m, {
-          label: new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' }).format(row.date),
-          best: 0, partial: 0, total: 0,
-        });
+        seen.set(m, new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' }).format(row.date));
       }
-      const entry = seen.get(m)!;
-      entry.total++;
-      if (row.rating === 'best') entry.best++;
-      else if (row.rating === 'partial') entry.partial++;
     }
-    // Return in calendar order
     return [...seen.entries()].sort((a, b) => a[0] - b[0]);
   });
 
-  const visibleRows = $derived(
-    rows.filter(r => r.date.getUTCMonth() === selectedMonth)
-  );
-
+  // Picking a month starts the window at the 1st of that month.
   function selectMonth(m: number) {
-    selectedMonth = m;
+    $startDate = new Date(Date.UTC($startDate.getUTCFullYear(), m, 1));
+  }
+
+  // ── Exact start-date picker ───────────────────────────────────────────────
+  const startInput = $derived($startDate.toISOString().slice(0, 10));
+  function onStartInput(e: Event) {
+    const v = (e.target as HTMLInputElement).value;
+    if (!v) return;
+    const [y, m, d] = v.split('-').map(Number);
+    $startDate = new Date(Date.UTC(y, m - 1, d));
   }
 
   // ── Year dropdown ────────────────────────────────────────────────────────────
   let yearOpen        = $state(false);
   let yearActiveIndex = $state(-1);
 
+  // Picking a year starts at today (current year) or Jan 1 (other years).
   function selectYear(y: number) {
-    $year = y;
+    $startDate = y === currentYear ? todayUTC() : new Date(Date.UTC(y, 0, 1));
     yearOpen = false;
     yearActiveIndex = -1;
   }
@@ -76,18 +82,6 @@
       yearActiveIndex = -1;
     }
   }
-
-  // When rows change (new year / location), reset to current month (or first available)
-  $effect(() => {
-    const available = months;
-    rows; // track
-    const defaultMonth = $year === currentYear ? currentMonth : 0;
-    if (available.some(([m]) => m === defaultMonth)) {
-      selectedMonth = defaultMonth;
-    } else if (available.length > 0) {
-      selectedMonth = available[0]![0];
-    }
-  });
 
   // ── Fixed bar bounds: local noon → next local noon (full 24h) ───────────────
   // 0 = local 12:00, 1440 = local 12:00 next day (minutes since local noon).
@@ -127,13 +121,24 @@
       </ul>
     {/if}
   </div>
-  {#each months as [m, info]}
+  {#each months as [m, label]}
     <button
       class="month-btn"
-      class:active={selectedMonth === m}
+      class:active={activeMonth === m}
       onclick={() => selectMonth(m)}
-    >{info.label}</button>
+    >{label}</button>
   {/each}
+
+  <div class="date-wrap">
+    <span class="date-label">Start</span>
+    <input
+      class="date-input"
+      type="date"
+      value={startInput}
+      oninput={onStartInput}
+      aria-label="Start date"
+    />
+  </div>
 </div>
 
 <div class="table-scroll">
@@ -255,6 +260,35 @@
   }
   .month-btn:hover  { background: var(--surface-2); border-color: var(--text-faint); color: var(--text); }
   .month-btn.active { background: var(--surface-2); border-color: var(--azure); color: var(--text); }
+
+  .date-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: 0.3rem;
+  }
+  .date-label {
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--text-faint);
+  }
+  .date-input {
+    padding: 0.3rem 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    color-scheme: dark;
+    cursor: pointer;
+  }
+  .date-input:hover { border-color: var(--text-faint); }
+  .date-input:focus { outline: none; border-color: var(--azure); }
 
   .table-scroll {
     overflow-x: auto;
