@@ -22,9 +22,10 @@
     if (!match) return null;
     try {
       const parsed = JSON.parse(decodeURIComponent(match.split('=').slice(1).join('=')));
+      if (!parsed || typeof parsed !== 'object') return null;
       if (
-        typeof parsed?.lat !== 'number' || !Number.isFinite(parsed.lat) ||
-        typeof parsed?.lon !== 'number' || !Number.isFinite(parsed.lon) ||
+        typeof parsed.lat !== 'number' || !Number.isFinite(parsed.lat) ||
+        typeof parsed.lon !== 'number' || !Number.isFinite(parsed.lon) ||
         parsed.lat < -90 || parsed.lat > 90 ||
         parsed.lon < -180 || parsed.lon > 180
       ) return null;
