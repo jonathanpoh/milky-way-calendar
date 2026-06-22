@@ -68,7 +68,7 @@
         </div>
         <div class="stat">
           <span class="value">{fmtDuration(win.durationHours)}</span>
-          <span class="key">{featured.gcClearWindow ? 'Core clear' : 'MW visible'}</span>
+          <span class="key">Duration</span>
         </div>
         <div class="stat moon">
           <span class="value"><MoonPhaseIcon phaseAngle={featured.moon.phaseAngle} size={18} illumination={featured.moon.illumination} /> {featured.moon.illumination}%</span>
