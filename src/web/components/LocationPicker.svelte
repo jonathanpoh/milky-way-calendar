@@ -1,82 +1,21 @@
 <script lang="ts">
-  import tzlookup from 'tz-lookup';
   import { location } from '../stores/calendar.js';
-  import type { Location } from '../../core/types.js';
   import { validateCoords } from '../utils/coords.js';
-  import { geoIPLocate, fetchPlaceSuggestions, fetchPlaceDetail } from '../utils/google-places.js';
+  import { fetchPlaceSuggestions, fetchPlaceDetail } from '../utils/google-places.js';
   import { PRESET_LOCATIONS } from '../utils/presets.js';
+  import { resolveLocation as resolveLocationData, saveCookie } from '../utils/location.js';
 
   const MAPS_KEY = import.meta.env.GOOGLE_MAPS_API_KEY;
-  const COOKIE_NAME = 'mwcal_location';
 
-  // ── Cookie helpers ───────────────────────────────────────────────────────
-  function saveCookie(loc: Location) {
-    const value = encodeURIComponent(JSON.stringify({
-      lat: loc.lat, lon: loc.lon, name: loc.name, timezone: loc.timezone,
-    }));
-    document.cookie = `${COOKIE_NAME}=${value}; max-age=${60 * 60 * 24 * 365}; path=/; SameSite=Lax`;
-  }
-
-  function loadCookie(): Location | null {
-    const match = document.cookie.split('; ').find(r => r.startsWith(COOKIE_NAME + '='));
-    if (!match) return null;
-    try {
-      const parsed = JSON.parse(decodeURIComponent(match.split('=').slice(1).join('=')));
-      if (!parsed || typeof parsed !== 'object') return null;
-      if (
-        typeof parsed.lat !== 'number' || !Number.isFinite(parsed.lat) ||
-        typeof parsed.lon !== 'number' || !Number.isFinite(parsed.lon) ||
-        parsed.lat < -90 || parsed.lat > 90 ||
-        parsed.lon < -180 || parsed.lon > 180
-      ) return null;
-      if (parsed.timezone != null && typeof parsed.timezone !== 'string') return null;
-      return parsed;
-    } catch { return null; }
-  }
-
-  // ── Resolve timezone + display name ─────────────────────────────────────
+  // ── Resolve timezone + display name, then publish to the store ───────────
+  // Location initialisation (URL → cookie → GeoIP → default) lives in url-sync.ts.
   async function resolveLocation(lat: number, lon: number, knownName?: string): Promise<void> {
     loading = true;
     error = '';
-    let timezone: string;
-    try {
-      timezone = tzlookup(lat, lon) ?? 'UTC';
-    } catch {
-      timezone = 'UTC';
-    }
-    let name = knownName ?? `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
-    if (!knownName) {
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`,
-          { headers: { 'Accept-Language': 'en' } },
-        );
-        if (res.ok) {
-          const data = await res.json();
-          const addr = data.address ?? {};
-          const city = addr.city ?? addr.town ?? addr.village ?? addr.county ?? '';
-          const country = addr.country ?? '';
-          name = [city, country].filter(Boolean).join(', ') || name;
-        }
-      } catch { /* keep coordinate fallback */ }
-    }
-    const loc: Location = { lat, lon, name, timezone };
-    resolvedName = name;
-    latInput = lat.toFixed(4);
-    lonInput = lon.toFixed(4);
+    const loc = await resolveLocationData(lat, lon, knownName);
     loading = false;
     saveCookie(loc);
     location.set(loc);
-  }
-
-  // ── GeoIP on initial load ────────────────────────────────────────────────
-  async function geoIPLoad() {
-    if (!MAPS_KEY) return;
-    try {
-      const result = await geoIPLocate(MAPS_KEY);
-      if (!result) return;
-      await resolveLocation(result.lat, result.lon);
-    } catch { /* silent — keep default */ }
   }
 
   // ── Reactive UI state ────────────────────────────────────────────────────
@@ -84,16 +23,15 @@
   let lonInput     = $state($location.lon.toFixed(4));
   let resolvedName = $state($location.name ?? '');
 
-  // ── Initialise: cookie → GeoIP → default ────────────────────────────────
-  const saved = loadCookie();
-  if (saved) {
-    location.set(saved);
-    latInput     = saved.lat.toFixed(4);
-    lonInput     = saved.lon.toFixed(4);
-    resolvedName = saved.name ?? '';
-  } else {
-    geoIPLoad();
-  }
+  // Reflect external location changes (URL restore, back/forward) in the inputs.
+  // The store only changes on commit, never while the user is typing, so this
+  // never clobbers in-progress edits.
+  $effect(() => {
+    latInput = $location.lat.toFixed(4);
+    lonInput = $location.lon.toFixed(4);
+    resolvedName = $location.name ?? '';
+  });
+
   let searchQuery  = $state('');
   let suggestions  = $state<Suggestion[]>([]);
   let showDropdown = $state(false);
@@ -340,35 +278,41 @@
 </div>
 
 <style>
-  .location-picker { margin-bottom: 1rem; }
+  .location-picker { margin-bottom: var(--sp-4); }
 
   .inputs {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    gap: 0.75rem;
+    gap: var(--sp-3);
   }
 
   label {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
-    font-size: 0.85rem;
-    color: #a6adc8;
+    gap: 0.3rem;
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--text-faint);
   }
 
   input[type="text"] {
-    padding: 0.3rem 0.5rem;
-    background: #1e1e2e;
-    border: 1px solid #45475a;
-    border-radius: 4px;
-    color: #cdd6f4;
+    padding: 0.4rem 0.55rem;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-body);
     font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
   }
   label:nth-child(1) input,
   label:nth-child(2) input { width: 9rem; }
   .search-wrap input        { width: 14rem; }
-  input:focus { outline: none; border-color: #89b4fa; }
+  input:focus { outline: none; border-color: var(--azure); }
 
   .preset-wrap {
     position: relative;
@@ -378,32 +322,35 @@
   }
 
   .preset-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #89b4fa;
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--text-faint);
   }
 
   .preset-btn {
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.3rem 0.6rem;
-    background: #1e1e2e;
-    border: 1px solid #45475a;
-    border-radius: 6px;
-    color: #cdd6f4;
-    font-size: 0.8rem;
-    font-weight: 500;
+    padding: 0.4rem 0.6rem;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 400;
     cursor: pointer;
     transition: background 0.1s, border-color 0.1s;
     min-width: 20rem;
     justify-content: space-between;
   }
-  .preset-btn:hover { background: #313244; border-color: #6c7086; }
+  .preset-btn:hover { background: var(--surface-2); border-color: var(--text-faint); }
 
   .chevron {
     font-size: 1rem;
-    color: #6c7086;
+    color: var(--text-faint);
     transition: transform 0.15s;
     display: inline-block;
     flex-shrink: 0;
@@ -415,31 +362,31 @@
     top: calc(100% + 4px);
     left: 0;
     min-width: 100%;
-    background: #1e1e2e;
-    border: 1px solid #45475a;
-    border-radius: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
     margin: 0;
     padding: 0.25rem 0;
     list-style: none;
     z-index: 200;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     max-height: 16rem;
     overflow-y: auto;
   }
   .preset-dropdown li {
-    padding: 0.35rem 0.7rem;
+    padding: 0.4rem 0.7rem;
     font-size: 0.85rem;
-    color: #cdd6f4;
+    color: var(--text);
     cursor: pointer;
   }
-  .preset-dropdown li:hover, .preset-dropdown li.active { background: #313244; }
-  .preset-dropdown li.selected { color: #89b4fa; font-weight: 600; }
+  .preset-dropdown li:hover, .preset-dropdown li.active { background: var(--surface); }
+  .preset-dropdown li.selected { color: var(--azure); font-weight: 700; }
 
   .search-wrap { position: relative; }
   .search-input-wrap { position: relative; display: flex; align-items: center; }
   .spin {
     position: absolute; right: 0.5rem;
-    font-size: 0.9rem; color: #6c7086;
+    font-size: 0.9rem; color: var(--text-faint);
     animation: spin 1s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -449,14 +396,14 @@
     top: calc(100% + 2px);
     left: 0;
     min-width: 100%;
-    background: #1e1e2e;
-    border: 1px solid #45475a;
-    border-radius: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
     margin: 0;
     padding: 0.25rem 0;
     list-style: none;
     z-index: 100;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
   }
   .dropdown li {
     padding: 0.4rem 0.7rem;
@@ -465,25 +412,26 @@
     flex-direction: column;
     gap: 0.1rem;
   }
-  .dropdown li:hover, .dropdown li.active { background: #313244; }
-  .main      { font-size: 0.9rem; color: #cdd6f4; }
-  .secondary { font-size: 0.75rem; color: #6c7086; }
+  .dropdown li:hover, .dropdown li.active { background: var(--surface); }
+  .main      { font-size: 0.9rem; color: var(--text); }
+  .secondary { font-size: 0.75rem; color: var(--text-faint); }
 
   .action-btn {
-    padding: 0.35rem 0.8rem;
-    border: 1px solid #45475a;
-    border-radius: 4px;
-    background: #1e1e2e;
-    color: #cdd6f4;
+    padding: 0.45rem 0.85rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-body);
     font-size: 0.85rem;
     cursor: pointer;
     transition: background 0.1s, border-color 0.1s;
     align-self: flex-end;
   }
-  .action-btn:hover:not(:disabled) { background: #313244; border-color: #6c7086; }
+  .action-btn:hover:not(:disabled) { background: var(--surface-2); border-color: var(--text-faint); }
   .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .update-btn { border-color: #89b4fa; color: #89b4fa; }
+  .update-btn { border-color: var(--azure); color: var(--azure); font-weight: 700; }
 
-  .resolved { margin: 0.4rem 0 0; font-size: 0.82rem; color: #a6adc8; }
-  .error    { margin: 0.4rem 0 0; font-size: 0.82rem; color: #f38ba8; }
+  .resolved { margin: var(--sp-2) 0 0; font-size: 0.85rem; color: var(--text-dim); }
+  .error    { margin: var(--sp-2) 0 0; font-size: 0.85rem; color: #f38ba8; }
 </style>

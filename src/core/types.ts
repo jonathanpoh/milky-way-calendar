@@ -37,6 +37,10 @@ export interface GalacticCenterData {
   transit: Date | null;
   transitAltitude: number; // degrees
   positionLabel: string;   // e.g. "Arch (15°) - Vertical (65°)"
+  // GC altitude range sampled across the MW window — drives the arc visualisation.
+  // null when there is no MW window that night.
+  windowMinAltitude: number | null; // degrees
+  windowMaxAltitude: number | null; // degrees
 }
 
 export type VisibilityRating = 'best' | 'partial' | 'not-visible';
@@ -48,6 +52,7 @@ export interface CalendarRow {
   gc: GalacticCenterData;
   mwWindow: TimeWindow | null;       // MW visibility window (dark ∩ GC above horizon)
   gcClearWindow: TimeWindow | null;  // subset where GC > 10°
+  shootingWindow: TimeWindow | null; // moon-free portion of the prime window (the shootable time)
   rating: VisibilityRating;
 }
 

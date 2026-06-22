@@ -1,140 +1,26 @@
 <script lang="ts">
   import type { CalendarRow } from '../../core/types.js';
   import Row from './CalendarRow.svelte';
-  import { location, year } from '../stores/calendar.js';
-
-  const YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 1 + i);
+  import { location, year, startDate } from '../stores/calendar.js';
 
   interface Props { rows: CalendarRow[]; }
   let { rows }: Props = $props();
 
   const tz = $derived($location.timezone ?? 'UTC');
 
-  // ── Month filter ────────────────────────────────────────────────────────────
-  const currentYear  = new Date().getFullYear();
-  const currentMonth = new Date().getUTCMonth();
-  let selectedMonth = $state<number>(currentMonth);
+  const WINDOW_DAYS = 30;
 
-  // Derive the set of months that actually appear in the rows.
-  const months = $derived.by(() => {
-    const seen = new Map<number, { label: string; best: number; partial: number; total: number }>();
-    for (const row of rows) {
-      const m = row.date.getUTCMonth();
-      if (!seen.has(m)) {
-        seen.set(m, {
-          label: new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' }).format(row.date),
-          best: 0, partial: 0, total: 0,
-        });
-      }
-      const entry = seen.get(m)!;
-      entry.total++;
-      if (row.rating === 'best') entry.best++;
-      else if (row.rating === 'partial') entry.partial++;
-    }
-    // Return in calendar order
-    return [...seen.entries()].sort((a, b) => a[0] - b[0]);
-  });
-
+  // The start date (a shared store, kept in the URL) drives the view: the table
+  // shows the next WINDOW_DAYS nights from here, crossing month boundaries.
   const visibleRows = $derived(
-    rows.filter(r => r.date.getUTCMonth() === selectedMonth)
+    rows.filter(r => r.date.getTime() >= $startDate.getTime()).slice(0, WINDOW_DAYS)
   );
-
-  function selectMonth(m: number) {
-    selectedMonth = m;
-  }
-
-  // ── Year dropdown ────────────────────────────────────────────────────────────
-  let yearOpen        = $state(false);
-  let yearActiveIndex = $state(-1);
-
-  function selectYear(y: number) {
-    $year = y;
-    yearOpen = false;
-    yearActiveIndex = -1;
-  }
-
-  function onYearKeydown(e: KeyboardEvent) {
-    if (!yearOpen) {
-      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        yearOpen = true;
-        yearActiveIndex = YEARS.indexOf($year);
-      }
-      return;
-    }
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      yearActiveIndex = Math.min(yearActiveIndex + 1, YEARS.length - 1);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      yearActiveIndex = Math.max(yearActiveIndex - 1, 0);
-    } else if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      if (yearActiveIndex >= 0) selectYear(YEARS[yearActiveIndex]);
-    } else if (e.key === 'Escape' || e.key === 'Tab') {
-      yearOpen = false;
-      yearActiveIndex = -1;
-    }
-  }
-
-  // When rows change (new year / location), reset to current month (or first available)
-  $effect(() => {
-    const available = months;
-    rows; // track
-    const defaultMonth = $year === currentYear ? currentMonth : 0;
-    if (available.some(([m]) => m === defaultMonth)) {
-      selectedMonth = defaultMonth;
-    } else if (available.length > 0) {
-      selectedMonth = available[0]![0];
-    }
-  });
 
   // ── Fixed bar bounds: local noon → next local noon (full 24h) ───────────────
   // 0 = local 12:00, 1440 = local 12:00 next day (minutes since local noon).
   const BAR_START_MIN =  0 * 60; // 12:00 (noon)
   const BAR_END_MIN   = 24 * 60; // 12:00 next day
 </script>
-
-<!-- Month filter bar (with year selector at left) -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="month-bar" onmousedown={(e) => { if (!(e.target as Element).closest('.year-wrap')) yearOpen = false; }}>
-  <div class="year-wrap">
-    <span class="year-label">Year</span>
-    <button
-      class="year-btn"
-      onclick={() => { yearOpen = !yearOpen; if (yearOpen) yearActiveIndex = YEARS.indexOf($year); }}
-      onkeydown={onYearKeydown}
-      aria-haspopup="listbox"
-      aria-expanded={yearOpen}
-      aria-controls="year-listbox"
-    >
-      {$year}<span class="chevron" class:open={yearOpen}>▾</span>
-    </button>
-    {#if yearOpen}
-      <ul class="year-dropdown" id="year-listbox" role="listbox" tabindex="-1" aria-activedescendant={yearActiveIndex >= 0 ? `year-opt-${yearActiveIndex}` : undefined}>
-        {#each YEARS as y, i}
-          <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-          <li
-            id="year-opt-{i}"
-            role="option"
-            aria-selected={y === $year}
-            class:selected={y === $year}
-            class:active={i === yearActiveIndex}
-            onmousedown={() => selectYear(y)}
-            onmouseenter={() => { yearActiveIndex = i; }}
-          >{y}</li>
-        {/each}
-      </ul>
-    {/if}
-  </div>
-  {#each months as [m, info]}
-    <button
-      class="month-btn"
-      class:active={selectedMonth === m}
-      onclick={() => selectMonth(m)}
-    >{info.label}</button>
-  {/each}
-</div>
 
 <div class="table-scroll">
 <table aria-label="Milky Way visibility calendar for {$year}">
@@ -145,6 +31,7 @@
       <th class="bar-header">Night  <span class="hint">hover for times</span></th>
       <th title="Moon illumination">Moon</th>
       <th title="MW window / GC clear (altitude > 10°)">MW / GC clear</th>
+      <th title="Ideal shooting window — GC clear and moon-free">Shooting window</th>
       <th>GC position</th>
     </tr>
   </thead>
@@ -153,100 +40,13 @@
       <Row {row} timezone={tz} barStartMin={BAR_START_MIN} barEndMin={BAR_END_MIN} />
     {/each}
     {#if visibleRows.length === 0}
-      <tr><td colspan="6" class="empty">No data for this month.</td></tr>
+      <tr><td colspan="7" class="empty">No data for the selected dates.</td></tr>
     {/if}
   </tbody>
 </table>
 </div>
 
 <style>
-  /* Month pill bar */
-  .month-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .year-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
-  .year-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #89b4fa;
-  }
-
-  .year-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.6rem;
-    background: #1e1e2e;
-    border: 1px solid #45475a;
-    border-radius: 6px;
-    color: #cdd6f4;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.1s, border-color 0.1s;
-    min-width: 5rem;
-    justify-content: space-between;
-  }
-  .year-btn:hover  { background: #313244; border-color: #6c7086; }
-
-  .chevron {
-    font-size: 1.0rem;
-    color: #6c7086;
-    transition: transform 0.15s;
-    display: inline-block;
-  }
-  .chevron.open { transform: rotate(180deg); }
-
-  .year-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    min-width: 100%;
-    background: #1e1e2e;
-    border: 1px solid #45475a;
-    border-radius: 4px;
-    margin: 0;
-    padding: 0.25rem 0;
-    list-style: none;
-    z-index: 200;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  }
-  .year-dropdown li {
-    padding: 0.35rem 0.7rem;
-    font-size: 0.85rem;
-    color: #cdd6f4;
-    cursor: pointer;
-    font-variant-numeric: tabular-nums;
-  }
-  .year-dropdown li:hover, .year-dropdown li.active { background: #313244; }
-  .year-dropdown li.selected { color: #89b4fa; font-weight: 600; }
-
-  .month-btn {
-    width: 3.8rem;
-    padding: 0.3rem 0;
-    background: #1e1e2e;
-    border: 1px solid #45475a;
-    border-radius: 6px;
-    color: #a6adc8;
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    text-align: center;
-    transition: background 0.1s, border-color 0.1s, color 0.1s;
-  }
-  .month-btn:hover  { background: #313244; border-color: #6c7086; color: #cdd6f4; }
-  .month-btn.active { background: #313244; border-color: #89b4fa; color: #cdd6f4; }
-
   .table-scroll {
     overflow-x: auto;
   }
@@ -258,24 +58,29 @@
   }
 
   thead tr {
-    border-bottom: 2px solid #45475a;
+    border-bottom: 1px solid var(--text-faint);
   }
 
   th {
     padding: 0.4rem 0.6rem;
     text-align: left;
-    font-size: 0.78rem;
-    color: #89b4fa;
-    font-weight: 600;
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.62rem;
+    color: var(--text-faint);
+    font-weight: 700;
     white-space: nowrap;
   }
   .bar-header { width: 100%; }
   .hint {
-    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    font-size: 0.6rem;
     font-weight: 400;
-    color: #45475a;
+    color: var(--text-faint);
     margin-left: 0.4rem;
+    text-transform: none;
   }
 
-  .empty { text-align: center; padding: 2rem; color: #585b70; }
+  .empty { text-align: center; padding: 2rem; color: var(--text-faint); }
 </style>

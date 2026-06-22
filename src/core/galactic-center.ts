@@ -24,24 +24,44 @@ export function gcAltitude(observer: InstanceType<typeof A.Observer>, time: Date
   return hor.altitude;
 }
 
-export function buildPositionLabel(
+export interface GcAltitudeRange {
+  minAltitude: number; // degrees, rounded
+  maxAltitude: number; // degrees, rounded
+}
+
+// Sample the GC's altitude across a window and return its min/max (rounded).
+// Returns null for an empty window.
+export function gcWindowAltitudeRange(
   observer: InstanceType<typeof A.Observer>,
   windowStart: Date,
   windowEnd: Date,
-): string {
+): GcAltitudeRange | null {
   const samples: number[] = [];
   const step = 15 * 60_000;
   for (let t = windowStart.getTime(); t <= windowEnd.getTime(); t += step) {
     samples.push(gcAltitude(observer, new Date(t)));
   }
-  if (samples.length === 0) return '';
+  if (samples.length === 0) return null;
+  return {
+    minAltitude: Math.round(Math.min(...samples)),
+    maxAltitude: Math.round(Math.max(...samples)),
+  };
+}
 
-  const minAlt = Math.round(Math.min(...samples));
-  const maxAlt = Math.round(Math.max(...samples));
-
+export function formatPositionLabel(range: GcAltitudeRange | null): string {
+  if (!range) return '';
+  const { minAltitude: minAlt, maxAltitude: maxAlt } = range;
   if (maxAlt < 45) return `Arch (${maxAlt}°)`;
   if (minAlt > 60) return `Vertical (${minAlt}°)`;
   return `Arch (${minAlt}°) - Vertical (${maxAlt}°)`;
+}
+
+export function buildPositionLabel(
+  observer: InstanceType<typeof A.Observer>,
+  windowStart: Date,
+  windowEnd: Date,
+): string {
+  return formatPositionLabel(gcWindowAltitudeRange(observer, windowStart, windowEnd));
 }
 
 export function getGalacticCenterData(location: Location, date: Date): GalacticCenterData {
@@ -70,9 +90,13 @@ export function getGalacticCenterData(location: Location, date: Date): GalacticC
   const transit = transitResult?.time.date ?? null;
   const transitAltitude = transit ? Math.round(gcAltitude(observer, transit)) : 0;
 
-  // positionLabel will be recomputed from the MW window in calendar.ts
-  // (using the full rise→set arc here includes daytime hours and inflates the max altitude)
+  // positionLabel and the window altitude range are recomputed from the MW window
+  // in calendar.ts (the full rise→set arc here includes daytime hours and inflates
+  // the max altitude).
   const positionLabel = '';
 
-  return { date, rise, set, transit, transitAltitude, positionLabel };
+  return {
+    date, rise, set, transit, transitAltitude, positionLabel,
+    windowMinAltitude: null, windowMaxAltitude: null,
+  };
 }

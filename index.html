@@ -25,6 +25,14 @@
     
     <link rel="stylesheet" href="/about.css" />
 
+    <!-- Apply saved theme before paint to avoid a flash -->
+    <script>
+      try {
+        var t = localStorage.getItem('mwcal_theme');
+        if (t) document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -51,8 +59,14 @@
   </head>
   <body>
     <header id="site-header">
-      <h1>🌌 Milky Way Calendar</h1>
-      <p class="subtitle">Plan your Milky Way astrophotography sessions</p>
+      <a class="brand-mark" href="https://jonathanpoh.photography" target="_blank" rel="noopener" aria-label="Jonathan Poh Photography">
+        <img src="/Jonathan Poh-white-low-res.png" alt="Jonathan Poh Photography" />
+      </a>
+      <div class="masthead">
+        <h1 class="wordmark">Milky Way Calendar</h1>
+        <p class="subtitle">An ephemeris for the galactic core</p>
+      </div>
+      <div id="theme-toggle"></div>
     </header>
 
     <div id="app"></div>
@@ -80,6 +94,9 @@
 
         <dt>What do the colours mean — bright green, mid green, dark green, gold?</dt>
         <dd>Bright green: the Galactic Centre is clearly above 10° altitude with no moon interference — the prime shooting window. Mid green: the GC is above the horizon but low (below 10°), or visible in a moon-free portion of a longer window. Dark green: the GC is visible but the moon is up and affecting contrast. Gold (bottom lane): the moon is above the horizon; brighter gold means higher illumination. Rows are also rated ★ best, ◑ partial, or ✗ not visible.</dd>
+
+        <dt>What do "Arch" and "Vertical" mean in the GC position column?</dt>
+        <dd>They describe how high the Galactic Centre climbs during the night's visible window, measured in degrees of altitude above the horizon — 0° is the horizon, 90° is straight overhead. "Arch (22°)" means the core stays low and sweeps across the sky in a shallow arc, peaking around 22°; this is typical at northern mid-latitudes and lends itself to landscape compositions with the core arching over the scene. "Vertical (75°)" means the core climbs high overhead — at least that altitude — which is typical closer to the equator and in the southern hemisphere, where it stands more upright. A range like "Arch (8°) - Vertical (85°)" means it spans from low to nearly overhead across the window. The small arc icon beside each row shows this at a glance: a flat curve for a low arch, a tall curve for a near-vertical pass.</dd>
 
         <dt>What's the best time of night to photograph the Milky Way?</dt>
         <dd>During astronomical darkness, with the Galactic Centre as high as possible above the horizon. In practice this is often between midnight and 3 am during peak season, though it shifts by location and month. The coloured bar on each row shows exactly which hours qualify.</dd>

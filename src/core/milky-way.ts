@@ -88,6 +88,54 @@ export function getMwWindows(
 }
 
 /**
+ * The longest contiguous portion of `window` during which the moon is below the
+ * horizon — i.e. the genuinely moon-free shooting time (what the bright-green
+ * bar shows). Returns null if the moon is up for the whole window. Samples moon
+ * altitude (like moonAboveHorizonFraction) rather than using moonrise/moonset,
+ * for robustness against UTC-anchor ambiguity.
+ */
+export function moonFreeWindow(location: Location, window: TimeWindow): TimeWindow | null {
+  const observer = makeObserver(location);
+  const step = 2 * 60_000;
+  const startT = window.start.getTime();
+  const endT = window.end.getTime();
+
+  const moonUp = (t: number): boolean => {
+    const equ = A.Equator(A.Body.Moon, new Date(t), observer, true, true);
+    const hor = A.Horizon(new Date(t), observer, equ.ra, equ.dec, 'normal');
+    return hor.altitude > 0;
+  };
+
+  let best: { s: number; e: number } | null = null;
+  let runStart: number | null = null;
+  let lastFree: number | null = null;
+
+  const closeRun = () => {
+    if (runStart !== null && lastFree !== null) {
+      if (!best || lastFree - runStart > best.e - best.s) best = { s: runStart, e: lastFree };
+    }
+    runStart = lastFree = null;
+  };
+
+  for (let t = startT; t <= endT; t += step) {
+    if (moonUp(t)) {
+      closeRun();
+    } else {
+      if (runStart === null) runStart = t;
+      lastFree = t;
+    }
+  }
+  closeRun();
+
+  if (!best || best.e <= best.s) return null;
+  return {
+    start: new Date(best.s),
+    end: new Date(best.e),
+    durationHours: (best.e - best.s) / 3_600_000,
+  };
+}
+
+/**
  * Sample the moon's altitude every 15 min across `window` and return the
  * fraction of samples where the moon is above the horizon (0–1).
  * More robust than moonrise/moonset time comparisons, which can return

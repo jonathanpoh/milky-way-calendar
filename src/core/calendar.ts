@@ -1,8 +1,8 @@
 import type { CalendarOptions, CalendarRow } from './types.js';
 import { getSunData } from './sun.js';
 import { getMoonData } from './moon.js';
-import { getGalacticCenterData, buildPositionLabel } from './galactic-center.js';
-import { getMwWindows } from './milky-way.js';
+import { getGalacticCenterData, gcWindowAltitudeRange, formatPositionLabel } from './galactic-center.js';
+import { getMwWindows, moonFreeWindow } from './milky-way.js';
 import { scoreNight } from './scoring.js';
 import { makeObserver } from './observer.js';
 
@@ -37,12 +37,23 @@ export function generateCalendar(options: CalendarOptions): CalendarRow[] {
     // full rise→set arc (which includes daytime hours and always finds peak transit altitude).
     // Using the MW window shows the GC's altitude range during the shooting window.
     if (mwWindow) {
-      gc.positionLabel = buildPositionLabel(observer, mwWindow.start, mwWindow.end);
+      const range = gcWindowAltitudeRange(observer, mwWindow.start, mwWindow.end);
+      gc.positionLabel = formatPositionLabel(range);
+      gc.windowMinAltitude = range?.minAltitude ?? null;
+      gc.windowMaxAltitude = range?.maxAltitude ?? null;
     }
 
     const rating = scoreNight(location, mwWindow, gcClearWindow, moon);
 
-    rows.push({ date, sun, moon, gc, mwWindow, gcClearWindow, rating });
+    // Moon-free shooting window: only meaningful on shootable nights. Trims the
+    // prime window (GC clear, else MW) to the time the moon is below the horizon.
+    let shootingWindow = null;
+    if (rating !== 'not-visible') {
+      const base = gcClearWindow ?? mwWindow;
+      if (base) shootingWindow = moonFreeWindow(location, base);
+    }
+
+    rows.push({ date, sun, moon, gc, mwWindow, gcClearWindow, shootingWindow, rating });
 
     current = new Date(Date.UTC(
       current.getUTCFullYear(),
