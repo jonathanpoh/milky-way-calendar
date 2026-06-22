@@ -23,8 +23,9 @@
       ?? null;
   });
 
-  // Headline window: the GC-clear (prime) window if present, else the MW window.
-  const win = $derived(featured ? (featured.gcClearWindow ?? featured.mwWindow) : null);
+  // Headline window: the moon-free shooting window (falls back to the GC-clear /
+  // MW window only if the core couldn't compute a moon-free portion).
+  const win = $derived(featured ? (featured.shootingWindow ?? featured.gcClearWindow ?? featured.mwWindow) : null);
 
   const eyebrow = $derived(featured?.rating === 'best' ? 'Next best night' : 'Next visible night');
 

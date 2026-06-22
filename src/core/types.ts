@@ -52,6 +52,7 @@ export interface CalendarRow {
   gc: GalacticCenterData;
   mwWindow: TimeWindow | null;       // MW visibility window (dark ∩ GC above horizon)
   gcClearWindow: TimeWindow | null;  // subset where GC > 10°
+  shootingWindow: TimeWindow | null; // moon-free portion of the prime window (the shootable time)
   rating: VisibilityRating;
 }
 

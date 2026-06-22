@@ -31,6 +31,7 @@
       <th class="bar-header">Night  <span class="hint">hover for times</span></th>
       <th title="Moon illumination">Moon</th>
       <th title="MW window / GC clear (altitude > 10°)">MW / GC clear</th>
+      <th title="Ideal shooting window — GC clear and moon-free">Shooting window</th>
       <th>GC position</th>
     </tr>
   </thead>
@@ -39,7 +40,7 @@
       <Row {row} timezone={tz} barStartMin={BAR_START_MIN} barEndMin={BAR_END_MIN} />
     {/each}
     {#if visibleRows.length === 0}
-      <tr><td colspan="6" class="empty">No data for the selected dates.</td></tr>
+      <tr><td colspan="7" class="empty">No data for the selected dates.</td></tr>
     {/if}
   </tbody>
 </table>

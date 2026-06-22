@@ -16,6 +16,25 @@
     return mm > 0 ? `${hh}h${mm}m` : `${hh}h`;
   }
 
+  // Compact duration, e.g. "2h4m" / "45m" — matches the MW/GC clear column.
+  function fmtWindowDur(h: number): string {
+    const total = Math.round(h * 60);
+    const hh = Math.floor(total / 60);
+    const mm = total % 60;
+    if (hh === 0) return `${mm}m`;
+    return mm > 0 ? `${hh}h${mm}m` : `${hh}h`;
+  }
+
+  function fmtTime(d: Date): string {
+    return new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone,
+    }).format(d);
+  }
+
+  // Moon-free prime window, computed in the core (null on not-visible nights or
+  // when the moon is up throughout — e.g. a bright moon rising mid-window).
+  const shootWindow = $derived(row.shootingWindow);
+
   const dateStr = $derived(new Intl.DateTimeFormat('en-GB', {
     month: 'short', day: '2-digit', timeZone: timezone,
   }).format(row.date));
@@ -63,6 +82,14 @@
       <span class="gc-clear" title="GC clear (altitude > 10°)"> / {fmtDuration(row.gcClearWindow.durationHours)}</span>
     {/if}
   </td>
+  <td class="window">
+    {#if shootWindow}
+      {fmtTime(shootWindow.start)}–{fmtTime(shootWindow.end)}
+      <span class="win-dur">({fmtWindowDur(shootWindow.durationHours)})</span>
+    {:else}
+      —
+    {/if}
+  </td>
   <td class="position">
     {#if row.gc.windowMaxAltitude != null}
       <span class="pos-inner">
@@ -102,6 +129,8 @@
   .moon-cell { vertical-align: middle; }
   .moon-inner { display: flex; align-items: center; gap: 0.3rem; }
   .num { text-align: right; min-width: 7rem; }
+  .window { min-width: 9.5rem; }
+  .win-dur { opacity: 0.6; font-size: 0.78rem; }
   .gc-clear { opacity: 0.6; font-size: 0.78rem; }
   .position { font-size: 0.78rem; min-width: 9rem; color: var(--text-dim); }
   /* arc + label both inherit the row's rating colour via currentColor */
