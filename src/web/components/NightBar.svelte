@@ -38,9 +38,13 @@
     }).format(date);
   }
 
-  // Key positions
-  const sunsetPct        = $derived(pct(row.sun.sunset)        ?? 0);
-  const sunrisePct       = $derived(pct(row.sun.sunrise)       ?? 100);
+  // Key positions.
+  // Polar day (midnight sun): the sun never sets, so force a full-day bar.
+  // Polar night and transition days: sunset/sunrise are null and the ?? 0 / ?? 100
+  // fallbacks fill the bar with night, with the real twilight cycle layered on top.
+  const isPolarDay = $derived(row.sun.regime === 'polar-day');
+  const sunsetPct        = $derived(isPolarDay ? 100 : (pct(row.sun.sunset)  ?? 0));
+  const sunrisePct       = $derived(isPolarDay ? 100 : (pct(row.sun.sunrise) ?? 100));
   const twilightEndPct   = $derived(pct(row.sun.twilightEnd)   ?? sunrisePct);
   const twilightStartPct = $derived(pct(row.sun.twilightStart) ?? sunsetPct);
   const mwStartPct       = $derived(row.mwWindow      ? pct(row.mwWindow.start)      : null);
@@ -57,14 +61,30 @@
     return ((localMinSinceNoon(date) - barStartMin) / barRangeMin) * 100;
   }
 
+  // Local midnight of this bar — the UTC instant the local clock reads 00:00 on
+  // the night the bar represents (row.date's local noon + 12h). Used as a stable
+  // reference for the moon-window filter when there is no sunset (polar regimes).
+  const barMidnight = $derived.by((): Date => {
+    const noonUTC = new Date(Date.UTC(
+      row.date.getUTCFullYear(), row.date.getUTCMonth(), row.date.getUTCDate(), 12,
+    ));
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone,
+    }).formatToParts(noonUTC);
+    const h = parseInt(parts.find(p => p.type === 'hour')!.value) % 24;
+    const m = parseInt(parts.find(p => p.type === 'minute')!.value);
+    const localNoon = new Date(noonUTC.getTime() + (12 * 60 - (h * 60 + m)) * 60_000);
+    return new Date(localNoon.getTime() + 12 * 3600_000);
+  });
+
   // Discard moon events outside this bar's ~24h window (noon to next noon).
   // getMoonData searches a 2-day window, so events 26h+ out wrap to the same
-  // clock time and paint a phantom span. Use sunset/sunrise as anchors: valid
-  // events fall within ~18h of either bound.
+  // clock time and paint a phantom span. Anchor on sunset when present, else on
+  // local midnight (polar day/night have no sunset); valid events fall within ~24h.
   function inBarWindow(date: Date | null): Date | null {
     if (!date) return null;
     const t = date.getTime();
-    const ref = row.sun.sunset.getTime();
+    const ref = (row.sun.sunset ?? barMidnight).getTime();
     return Math.abs(t - ref) < 24 * 3600_000 ? date : null;
   }
 
@@ -209,10 +229,10 @@
     const add = (x: number | null, text: string, cls: string) => {
       if (x !== null && text) raw.push({ x, text, cls });
     };
-    add(sunsetPct,        "Sunset " + fmtTime(row.sun.sunset),        'sun');
+    if (row.sun.sunset)  add(sunsetPct,  "Sunset " + fmtTime(row.sun.sunset),  'sun');
     add(twilightEndPct,   fmtTime(row.sun.twilightEnd),   'dark');
     add(twilightStartPct, fmtTime(row.sun.twilightStart), 'dark');
-    add(sunrisePct,       fmtTime(row.sun.sunrise) + " Sunrise",       'sun');
+    if (row.sun.sunrise) add(sunrisePct, fmtTime(row.sun.sunrise) + " Sunrise", 'sun');
     return applyCollision(raw, 1).map(lbl => ({ ...lbl, xform: skyXform(lbl.x) }));
   });
 

@@ -8,9 +8,9 @@ describe('getSunData — Palmela, Portugal (UTC+0/+1)', () => {
     expect(data.sunset).toBeInstanceOf(Date);
     expect(data.sunrise).toBeInstanceOf(Date);
     expect(data.twilightEnd).not.toBeNull();
-    expect(data.twilightEnd!.getTime()).toBeGreaterThan(data.sunset.getTime());
+    expect(data.twilightEnd!.getTime()).toBeGreaterThan(data.sunset!.getTime());
     expect(data.twilightStart).not.toBeNull();
-    expect(data.twilightStart!.getTime()).toBeLessThan(data.sunrise.getTime());
+    expect(data.twilightStart!.getTime()).toBeLessThan(data.sunrise!.getTime());
     expect(data.darkWindow).not.toBeNull();
     expect(data.darkWindow!.durationHours).toBeGreaterThan(0);
   });
@@ -23,8 +23,8 @@ describe('getSunData — Palmela, Portugal (UTC+0/+1)', () => {
 
   it('sunset is in the evening local time (UTC 17–21) for Portugal in April', () => {
     const data = getSunData(PALMELA, new Date(Date.UTC(2026, 3, 1)));
-    expect(data.sunset.getUTCHours()).toBeGreaterThanOrEqual(17);
-    expect(data.sunset.getUTCHours()).toBeLessThanOrEqual(21);
+    expect(data.sunset!.getUTCHours()).toBeGreaterThanOrEqual(17);
+    expect(data.sunset!.getUTCHours()).toBeLessThanOrEqual(21);
   });
 });
 
@@ -32,8 +32,8 @@ describe('getSunData — Sydney, Australia (UTC+10/+11)', () => {
   it('sunset is in UTC morning (06–10 UTC) for Sydney in April', () => {
     // Sydney AEST (UTC+10): ~18:00 local = ~08:00 UTC
     const data = getSunData(SYDNEY, new Date(Date.UTC(2026, 3, 1)));
-    expect(data.sunset.getUTCHours()).toBeGreaterThanOrEqual(6);
-    expect(data.sunset.getUTCHours()).toBeLessThanOrEqual(10);
+    expect(data.sunset!.getUTCHours()).toBeGreaterThanOrEqual(6);
+    expect(data.sunset!.getUTCHours()).toBeLessThanOrEqual(10);
   });
 
   it('dark window is positive for Sydney in July (southern-hemisphere winter, long nights)', () => {
@@ -49,9 +49,9 @@ describe('getSunData — Sydney, Australia (UTC+10/+11)', () => {
 
   it('twilight ordering is correct', () => {
     const data = getSunData(SYDNEY, new Date(Date.UTC(2026, 3, 15)));
-    expect(data.sunset.getTime()).toBeLessThan(data.twilightEnd!.getTime());
+    expect(data.sunset!.getTime()).toBeLessThan(data.twilightEnd!.getTime());
     expect(data.twilightEnd!.getTime()).toBeLessThan(data.twilightStart!.getTime());
-    expect(data.twilightStart!.getTime()).toBeLessThan(data.sunrise.getTime());
+    expect(data.twilightStart!.getTime()).toBeLessThan(data.sunrise!.getTime());
   });
 });
 
@@ -59,7 +59,7 @@ describe('getSunData — Denver, USA (UTC-6/-7)', () => {
   it('sunset is in UTC late-evening / early-morning (00–04 UTC) in summer', () => {
     // Denver MDT (UTC-6): ~20:30 local = ~02:30 UTC
     const data = getSunData(DENVER, new Date(Date.UTC(2024, 6, 15)));
-    const h = data.sunset.getUTCHours();
+    const h = data.sunset!.getUTCHours();
     expect(h >= 0 && h <= 4).toBe(true);
   });
 
@@ -79,8 +79,8 @@ describe('getSunData — Tokyo, Japan (UTC+9)', () => {
   it('sunset is in UTC morning (07–12 UTC) for Tokyo in summer', () => {
     // Tokyo JST (UTC+9): ~19:00 local = ~10:00 UTC
     const data = getSunData(TOKYO, new Date(Date.UTC(2026, 6, 15)));
-    expect(data.sunset.getUTCHours()).toBeGreaterThanOrEqual(7);
-    expect(data.sunset.getUTCHours()).toBeLessThanOrEqual(12);
+    expect(data.sunset!.getUTCHours()).toBeGreaterThanOrEqual(7);
+    expect(data.sunset!.getUTCHours()).toBeLessThanOrEqual(12);
   });
 
   it('dark window is positive in summer', () => {
@@ -113,5 +113,76 @@ describe('getSunData — high latitude / white nights', () => {
     const data = getSunData(COPENHAGEN, new Date(Date.UTC(2026, 11, 21)));
     expect(data.darkWindow).not.toBeNull();
     expect(data.darkWindow!.durationHours).toBeGreaterThan(5);
+  });
+});
+
+describe('getSunData — polar regimes (Abisko, above the Arctic Circle)', () => {
+  it('normal latitude/day reports regime "normal" with real sun times', () => {
+    const data = getSunData(PALMELA, new Date(Date.UTC(2026, 11, 21)));
+    expect(data.regime).toBe('normal');
+    expect(data.sunset).toBeInstanceOf(Date);
+    expect(data.sunrise).toBeInstanceOf(Date);
+  });
+
+  it('Abisko polar day (Jun 21): regime "polar-day", null sun times, no darkness', () => {
+    const data = getSunData(ABISKO, new Date(Date.UTC(2026, 5, 21)));
+    expect(data.regime).toBe('polar-day');
+    expect(data.sunset).toBeNull();
+    expect(data.sunrise).toBeNull();
+    expect(data.darkWindow).toBeNull();
+  });
+
+  it('Abisko polar night (Dec 21): regime "polar-night", null sun times', () => {
+    const data = getSunData(ABISKO, new Date(Date.UTC(2026, 11, 21)));
+    expect(data.regime).toBe('polar-night');
+    expect(data.sunset).toBeNull();
+    expect(data.sunrise).toBeNull();
+  });
+
+  it('Abisko polar night still has a real dark window bracketing local midnight', () => {
+    // Regression: previously sunset/sunrise collapsed to local-noon+6h and the
+    // dark window anchored a day late, garbling the night bars Dec 5 → Jan 6.
+    const date = new Date(Date.UTC(2026, 11, 21));
+    const data = getSunData(ABISKO, date);
+    expect(data.darkWindow).not.toBeNull();
+    expect(data.darkWindow!.durationHours).toBeGreaterThan(5);
+    expect(data.darkWindow!.end.getTime()).toBeGreaterThan(data.darkWindow!.start.getTime());
+    // The dark window must fall on the night OF this date (within ~24h of local
+    // noon), not be shifted onto the following day.
+    const noon = Date.UTC(2026, 11, 21, 11); // ~local noon at Abisko (UTC+1)
+    expect(data.darkWindow!.start.getTime() - noon).toBeLessThan(24 * 3600_000);
+  });
+
+  it('Abisko produces no garbled sun data across the reported span (Dec 5 → Jan 6)', () => {
+    // Regression for the reported bug: every day in the polar-night span used to
+    // collapse sunset and sunrise onto the same fabricated time (local noon+6h),
+    // garbling the night bars. Assert that never happens and the dark window,
+    // when present, is a real window on the night of that date.
+    let current = new Date(Date.UTC(2026, 11, 5));
+    const end = new Date(Date.UTC(2027, 0, 6));
+    while (current <= end) {
+      const data = getSunData(ABISKO, current);
+      // Never the collapsed fake pair.
+      if (data.sunset && data.sunrise) {
+        expect(data.sunset!.getTime()).not.toBe(data.sunrise!.getTime());
+      }
+      if (data.darkWindow) {
+        expect(data.darkWindow.end.getTime()).toBeGreaterThan(data.darkWindow.start.getTime());
+        const noon = Date.UTC(
+          current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate(), 11,
+        );
+        // Dark window starts within this date's own ~24h night frame, not shifted a day on.
+        expect(data.darkWindow.start.getTime() - noon).toBeGreaterThanOrEqual(0);
+        expect(data.darkWindow.start.getTime() - noon).toBeLessThan(24 * 3600_000);
+      }
+      current = new Date(current.getTime() + 24 * 3600_000);
+    }
+  });
+
+  it('Abisko deep polar night reports the regime and null sun times', () => {
+    const data = getSunData(ABISKO, new Date(Date.UTC(2026, 11, 21)));
+    expect(data.regime).toBe('polar-night');
+    expect(data.sunset).toBeNull();
+    expect(data.sunrise).toBeNull();
   });
 });
