@@ -15,6 +15,10 @@ Available as a **web app** (Svelte, runs entirely in the browser). A CLI tool is
 - Cookie-based location persistence across visits
 - GeoIP-based location estimate on first load
 
+## Prerequisites
+
+Node.js ≥ 24 (LTS).
+
 ## Web App
 
 ```bash
@@ -55,7 +59,7 @@ npm run cli -- --lat 38.18 --lon -7.59 --name "Alqueva, Portugal" --year 2026
 | `--start` | Jan 1 | Start date (YYYY-MM-DD) |
 | `--end` | Dec 31 | End date (YYYY-MM-DD) |
 | `--interval` | `7` | Days between rows |
-| `--timezone` | `Europe/Lisbon` | Display timezone (IANA) |
+| `--timezone` | auto (from coords) | Display timezone (IANA) |
 
 ## Development
 
