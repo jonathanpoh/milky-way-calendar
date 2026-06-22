@@ -106,14 +106,15 @@ export function moonFreeWindow(location: Location, window: TimeWindow): TimeWind
     return hor.altitude > 0;
   };
 
-  let best: { s: number; e: number } | null = null;
+  // Collect each contiguous moon-free run, then pick the longest. (Assigning
+  // `best` in the linear flow rather than inside a closure keeps TypeScript's
+  // control-flow narrowing happy — a closure-mutated `let` narrows to `null`.)
+  const runs: { s: number; e: number }[] = [];
   let runStart: number | null = null;
   let lastFree: number | null = null;
 
   const closeRun = () => {
-    if (runStart !== null && lastFree !== null) {
-      if (!best || lastFree - runStart > best.e - best.s) best = { s: runStart, e: lastFree };
-    }
+    if (runStart !== null && lastFree !== null) runs.push({ s: runStart, e: lastFree });
     runStart = lastFree = null;
   };
 
@@ -126,6 +127,11 @@ export function moonFreeWindow(location: Location, window: TimeWindow): TimeWind
     }
   }
   closeRun();
+
+  let best: { s: number; e: number } | null = null;
+  for (const run of runs) {
+    if (!best || run.e - run.s > best.e - best.s) best = run;
+  }
 
   if (!best || best.e <= best.s) return null;
   return {
