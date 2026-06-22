@@ -1,13 +1,17 @@
 import type { CalendarOptions, CalendarRow } from './types.js';
 import { getSunData } from './sun.js';
 import { getMoonData } from './moon.js';
-import { getGalacticCenterData, buildPositionLabel, gcAltitude } from './galactic-center.js';
+import { getGalacticCenterData, buildPositionLabel } from './galactic-center.js';
 import { getMwWindows } from './milky-way.js';
 import { scoreNight } from './scoring.js';
 import { makeObserver } from './observer.js';
 
 export function generateCalendar(options: CalendarOptions): CalendarRow[] {
   const { location, startDate, endDate, interval = 1 } = options;
+
+  if (!Number.isFinite(interval) || interval < 1) {
+    throw new Error('interval must be >= 1');
+  }
   const observer = makeObserver(location);
   const rows: CalendarRow[] = [];
 

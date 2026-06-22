@@ -4,7 +4,7 @@
 <aside class="legend" aria-label="Rating legend">
   <span class="item best">★ Best — GC visible ≥2h, low moon interference</span>
   <span class="item partial">◑ Partial — MW visible but limited</span>
-  <span class="item none">✗ Not visible — GC below horizon during darkness</span>
+  <span class="item none">✗ Not visible — GC below horizon, or washed out by a bright moon</span>
 </aside>
 
 <style>

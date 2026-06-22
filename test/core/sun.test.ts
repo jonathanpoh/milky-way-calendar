@@ -1,21 +1,24 @@
 import { describe, it, expect } from 'vitest';
 import { getSunData } from '../../src/core/sun.js';
-import { PALMELA, SYDNEY, TOKYO, DENVER } from '../fixtures/locations.js';
+import { PALMELA, SYDNEY, TOKYO, DENVER, COPENHAGEN, ABISKO } from '../fixtures/locations.js';
 
 describe('getSunData — Palmela, Portugal (UTC+0/+1)', () => {
   it('returns a valid dark window for a summer day', () => {
     const data = getSunData(PALMELA, new Date(Date.UTC(2026, 5, 21))); // Jun 21
     expect(data.sunset).toBeInstanceOf(Date);
     expect(data.sunrise).toBeInstanceOf(Date);
-    expect(data.twilightEnd.getTime()).toBeGreaterThan(data.sunset.getTime());
-    expect(data.twilightStart.getTime()).toBeLessThan(data.sunrise.getTime());
-    expect(data.darkWindow.durationHours).toBeGreaterThan(0);
+    expect(data.twilightEnd).not.toBeNull();
+    expect(data.twilightEnd!.getTime()).toBeGreaterThan(data.sunset.getTime());
+    expect(data.twilightStart).not.toBeNull();
+    expect(data.twilightStart!.getTime()).toBeLessThan(data.sunrise.getTime());
+    expect(data.darkWindow).not.toBeNull();
+    expect(data.darkWindow!.durationHours).toBeGreaterThan(0);
   });
 
   it('returns a longer dark window in winter than summer', () => {
     const summer = getSunData(PALMELA, new Date(Date.UTC(2026, 5, 21)));
     const winter = getSunData(PALMELA, new Date(Date.UTC(2026, 11, 21)));
-    expect(winter.darkWindow.durationHours).toBeGreaterThan(summer.darkWindow.durationHours);
+    expect(winter.darkWindow!.durationHours).toBeGreaterThan(summer.darkWindow!.durationHours);
   });
 
   it('sunset is in the evening local time (UTC 17–21) for Portugal in April', () => {
@@ -35,20 +38,20 @@ describe('getSunData — Sydney, Australia (UTC+10/+11)', () => {
 
   it('dark window is positive for Sydney in July (southern-hemisphere winter, long nights)', () => {
     const data = getSunData(SYDNEY, new Date(Date.UTC(2026, 6, 1)));
-    expect(data.darkWindow.durationHours).toBeGreaterThan(5);
+    expect(data.darkWindow!.durationHours).toBeGreaterThan(5);
   });
 
   it('southern hemisphere: winter (Jul) has longer dark window than summer (Jan)', () => {
     const summer = getSunData(SYDNEY, new Date(Date.UTC(2026, 0, 15))); // Jan
     const winter = getSunData(SYDNEY, new Date(Date.UTC(2026, 6, 15))); // Jul
-    expect(winter.darkWindow.durationHours).toBeGreaterThan(summer.darkWindow.durationHours);
+    expect(winter.darkWindow!.durationHours).toBeGreaterThan(summer.darkWindow!.durationHours);
   });
 
   it('twilight ordering is correct', () => {
     const data = getSunData(SYDNEY, new Date(Date.UTC(2026, 3, 15)));
-    expect(data.sunset.getTime()).toBeLessThan(data.twilightEnd.getTime());
-    expect(data.twilightEnd.getTime()).toBeLessThan(data.twilightStart.getTime());
-    expect(data.twilightStart.getTime()).toBeLessThan(data.sunrise.getTime());
+    expect(data.sunset.getTime()).toBeLessThan(data.twilightEnd!.getTime());
+    expect(data.twilightEnd!.getTime()).toBeLessThan(data.twilightStart!.getTime());
+    expect(data.twilightStart!.getTime()).toBeLessThan(data.sunrise.getTime());
   });
 });
 
@@ -62,13 +65,13 @@ describe('getSunData — Denver, USA (UTC-6/-7)', () => {
 
   it('dark window is positive in summer', () => {
     const data = getSunData(DENVER, new Date(Date.UTC(2024, 6, 15)));
-    expect(data.darkWindow.durationHours).toBeGreaterThan(0);
+    expect(data.darkWindow!.durationHours).toBeGreaterThan(0);
   });
 
   it('winter has longer dark window than summer', () => {
     const summer = getSunData(DENVER, new Date(Date.UTC(2024, 5, 21)));
     const winter = getSunData(DENVER, new Date(Date.UTC(2024, 11, 21)));
-    expect(winter.darkWindow.durationHours).toBeGreaterThan(summer.darkWindow.durationHours);
+    expect(winter.darkWindow!.durationHours).toBeGreaterThan(summer.darkWindow!.durationHours);
   });
 });
 
@@ -82,6 +85,33 @@ describe('getSunData — Tokyo, Japan (UTC+9)', () => {
 
   it('dark window is positive in summer', () => {
     const data = getSunData(TOKYO, new Date(Date.UTC(2026, 6, 15)));
-    expect(data.darkWindow.durationHours).toBeGreaterThan(0);
+    expect(data.darkWindow).not.toBeNull();
+    expect(data.darkWindow!.durationHours).toBeGreaterThan(0);
+  });
+});
+
+describe('getSunData — high latitude / white nights', () => {
+  it('Copenhagen Jun 21 — no astronomical darkness', () => {
+    const data = getSunData(COPENHAGEN, new Date(Date.UTC(2026, 5, 21)));
+    expect(data.darkWindow).toBeNull();
+    expect(data.twilightEnd).toBeNull();
+    expect(data.twilightStart).toBeNull();
+  });
+
+  it('Abisko Jun 21 (polar day / midnight sun) — no astronomical darkness', () => {
+    const data = getSunData(ABISKO, new Date(Date.UTC(2026, 5, 21)));
+    expect(data.darkWindow).toBeNull();
+  });
+
+  it('mid-latitude summer still has a positive dark window', () => {
+    const data = getSunData(PALMELA, new Date(Date.UTC(2026, 5, 21)));
+    expect(data.darkWindow).not.toBeNull();
+    expect(data.darkWindow!.durationHours).toBeGreaterThan(0);
+  });
+
+  it('Copenhagen in winter has astronomical darkness', () => {
+    const data = getSunData(COPENHAGEN, new Date(Date.UTC(2026, 11, 21)));
+    expect(data.darkWindow).not.toBeNull();
+    expect(data.darkWindow!.durationHours).toBeGreaterThan(5);
   });
 });

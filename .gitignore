@@ -11,6 +11,9 @@ dist/
 # macOS
 .DS_Store
 
+# Internal plans (local reference only)
+*-plan.md
+
 # Editor
 .vscode/
 .idea/

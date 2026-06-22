@@ -15,9 +15,9 @@ export interface SunData {
   date: Date;
   sunset: Date;
   sunrise: Date;
-  twilightEnd: Date;   // astronomical twilight end (evening, sun at -18°)
-  twilightStart: Date; // astronomical twilight start (morning, sun at -18°)
-  darkWindow: TimeWindow; // twilightEnd → twilightStart
+  twilightEnd: Date | null;   // astronomical twilight end (evening, sun at -18°) — null during white nights
+  twilightStart: Date | null; // astronomical twilight start (morning, sun at -18°) — null during white nights
+  darkWindow: TimeWindow | null; // twilightEnd → twilightStart — null when sun never reaches -18°
 }
 
 export interface MoonData {

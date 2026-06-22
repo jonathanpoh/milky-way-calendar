@@ -21,7 +21,16 @@
     const match = document.cookie.split('; ').find(r => r.startsWith(COOKIE_NAME + '='));
     if (!match) return null;
     try {
-      return JSON.parse(decodeURIComponent(match.split('=').slice(1).join('=')));
+      const parsed = JSON.parse(decodeURIComponent(match.split('=').slice(1).join('=')));
+      if (!parsed || typeof parsed !== 'object') return null;
+      if (
+        typeof parsed.lat !== 'number' || !Number.isFinite(parsed.lat) ||
+        typeof parsed.lon !== 'number' || !Number.isFinite(parsed.lon) ||
+        parsed.lat < -90 || parsed.lat > 90 ||
+        parsed.lon < -180 || parsed.lon > 180
+      ) return null;
+      if (parsed.timezone != null && typeof parsed.timezone !== 'string') return null;
+      return parsed;
     } catch { return null; }
   }
 
@@ -40,7 +49,7 @@
       try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`,
-          { headers: { 'Accept-Language': 'en', 'User-Agent': 'milkyway-calendar/1.0' } },
+          { headers: { 'Accept-Language': 'en' } },
         );
         if (res.ok) {
           const data = await res.json();

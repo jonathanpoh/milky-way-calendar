@@ -14,7 +14,7 @@ export function getMwWindows(
   ensureGCRegistered();
   const dark = sun.darkWindow;
 
-  if (dark.durationHours <= 0) {
+  if (!dark || dark.durationHours <= 0) {
     return { mwWindow: null, gcClearWindow: null };
   }
 
@@ -45,8 +45,13 @@ export function getMwWindows(
     mwEndT = Math.min(darkEndT, setResult ? setResult.date.getTime() : Infinity);
   } else {
     // Case B: GC not yet up — use pre-computed rise/set.
-    const gcRiseT = gc.rise ? gc.rise.getTime() : -Infinity;
-    const gcSetT  = gc.set  ? gc.set.getTime()  :  Infinity;
+    // If gc.rise is null, the GC never rises (circumpolar below horizon at this
+    // latitude) — no MW window. We already know altAtDarkStart <= 0.
+    if (!gc.rise) {
+      return { mwWindow: null, gcClearWindow: null };
+    }
+    const gcRiseT = gc.rise.getTime();
+    const gcSetT  = gc.set ? gc.set.getTime() : Infinity;
     mwStartT = Math.max(darkStartT, gcRiseT);
     mwEndT   = Math.min(darkEndT,   gcSetT);
   }

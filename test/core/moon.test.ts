@@ -70,3 +70,28 @@ describe('getMoonData — location smoke tests (Sydney, Tokyo, Denver)', () => {
     });
   }
 });
+
+describe('getMoonData — +1 flag uses local midnight, not UTC', () => {
+  it('Denver: same-evening event in UTC next-day is not flagged +1', () => {
+    // Denver MDT = UTC-6. An event at 02:00 UTC is 20:00 local (same evening).
+    // The old code compared against UTC midnight and would flag it +1.
+    const data = getMoonData(DENVER, new Date(Date.UTC(2026, 6, 15)));
+    if (data.moonrise && data.moonrise.getUTCHours() >= 0 && data.moonrise.getUTCHours() < 6) {
+      expect(data.moonriseNextDay).toBe(false);
+    }
+  });
+
+  it('genuine post-local-midnight event is flagged +1', () => {
+    // Find a date where moonrise occurs after local midnight for Palmela.
+    // Around full moon in winter, moon rises late.
+    const data = getMoonData(PALMELA, new Date(Date.UTC(2026, 0, 5)));
+    if (data.moonrise) {
+      const localH = new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit', hour12: false, timeZone: 'Europe/Lisbon',
+      }).formatToParts(data.moonrise).find(p => p.type === 'hour')!.value;
+      const h = parseInt(localH) % 24;
+      // If moonrise is in the AM local hours (0-11), it should be +1
+      if (h < 12) expect(data.moonriseNextDay).toBe(true);
+    }
+  });
+});
