@@ -2,7 +2,8 @@
   import LocationPicker from './components/LocationPicker.svelte';
   import CalendarTable from './components/CalendarTable.svelte';
   import HeroNight from './components/HeroNight.svelte';
-  import { calendarRows } from './stores/calendar.js';
+  import StartDatePicker from './components/StartDatePicker.svelte';
+  import { calendarRows, startDate } from './stores/calendar.js';
 
   const rows = $derived($calendarRows);
   const best = $derived(rows.filter(r => r.rating === 'best').length);
@@ -15,6 +16,10 @@
 
   <section class="controls">
     <LocationPicker />
+  </section>
+
+  <section class="date-bar">
+    <StartDatePicker value={$startDate} onChange={(d) => ($startDate = d)} />
   </section>
 
   <section class="summary" aria-label="Rating summary">
@@ -33,7 +38,9 @@
     padding: var(--sp-5) var(--sp-4);
   }
 
-  .controls { margin-bottom: var(--sp-5); }
+  .controls { margin-bottom: var(--sp-4); }
+
+  .date-bar { display: flex; align-items: center; margin-bottom: var(--sp-4); }
 
   .summary {
     display: flex;

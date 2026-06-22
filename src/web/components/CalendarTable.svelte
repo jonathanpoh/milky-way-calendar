@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { CalendarRow } from '../../core/types.js';
   import Row from './CalendarRow.svelte';
-  import StartDatePicker from './StartDatePicker.svelte';
   import { location, year, startDate } from '../stores/calendar.js';
 
   interface Props { rows: CalendarRow[]; }
@@ -22,10 +21,6 @@
   const BAR_START_MIN =  0 * 60; // 12:00 (noon)
   const BAR_END_MIN   = 24 * 60; // 12:00 next day
 </script>
-
-<div class="date-bar">
-  <StartDatePicker value={$startDate} onChange={(d) => ($startDate = d)} />
-</div>
 
 <div class="table-scroll">
 <table aria-label="Milky Way visibility calendar for {$year}">
@@ -51,12 +46,6 @@
 </div>
 
 <style>
-  .date-bar {
-    display: flex;
-    align-items: center;
-    margin-bottom: var(--sp-3);
-  }
-
   .table-scroll {
     overflow-x: auto;
   }

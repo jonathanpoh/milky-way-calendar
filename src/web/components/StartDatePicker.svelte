@@ -120,17 +120,19 @@
 </script>
 
 <div class="start-picker" bind:this={root}>
-  <span class="label">Start</span>
-  <button
-    class="trigger"
-    bind:this={trigger}
-    onclick={toggle}
-    onkeydown={(e) => { if (!open && (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openPicker(); } }}
-    aria-haspopup="dialog"
-    aria-expanded={open}
-  >
-    {buttonLabel}<span class="chevron" class:open>▾</span>
-  </button>
+  <label class="field">
+    <span class="label">Start date</span>
+    <button
+      class="trigger"
+      bind:this={trigger}
+      onclick={toggle}
+      onkeydown={(e) => { if (!open && (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openPicker(); } }}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+    >
+      {buttonLabel}<span class="chevron" class:open>▾</span>
+    </button>
+  </label>
   <button class="today-link" onclick={resetToday}>today</button>
 
   {#if open}
@@ -173,14 +175,20 @@
   .start-picker {
     position: relative;
     display: flex;
-    align-items: center;
-    gap: 0.4rem;
+    align-items: flex-end;
+    gap: 0.75rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
   }
 
   .label {
     font-family: var(--font-label);
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     font-size: 0.62rem;
     font-weight: 700;
     color: var(--text-faint);
@@ -189,22 +197,22 @@
   .trigger {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.6rem;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.4rem 0.55rem;
     background: var(--surface);
     border: 1px solid var(--hairline);
     border-radius: var(--radius);
     color: var(--text);
     font-family: var(--font-body);
-    font-size: 0.85rem;
-    font-weight: 700;
+    font-size: 0.9rem;
     font-variant-numeric: tabular-nums;
     cursor: pointer;
-    transition: background 0.1s, border-color 0.1s;
-    min-width: 8.5rem;
-    justify-content: space-between;
+    transition: border-color 0.1s;
+    min-width: 9rem;
   }
-  .trigger:hover { background: var(--surface-2); border-color: var(--azure); }
+  .trigger:hover,
+  .trigger:focus { outline: none; border-color: var(--azure); }
 
   .chevron { color: var(--text-faint); transition: transform 0.15s; }
   .chevron.open { transform: rotate(180deg); }
@@ -212,7 +220,7 @@
   .today-link {
     background: none;
     border: none;
-    padding: 0;
+    padding: 0 0 0.5rem;
     font-family: var(--font-label);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -220,10 +228,10 @@
     font-weight: 700;
     color: var(--azure);
     cursor: pointer;
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.15s;
+    line-height: 1;
+    transition: color 0.15s;
   }
-  .today-link:hover { border-bottom-color: var(--azure); }
+  .today-link:hover { color: var(--text); }
 
   .popover {
     position: absolute;
