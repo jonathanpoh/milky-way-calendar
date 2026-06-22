@@ -37,6 +37,10 @@ export interface GalacticCenterData {
   transit: Date | null;
   transitAltitude: number; // degrees
   positionLabel: string;   // e.g. "Arch (15°) - Vertical (65°)"
+  // GC altitude range sampled across the MW window — drives the arc visualisation.
+  // null when there is no MW window that night.
+  windowMinAltitude: number | null; // degrees
+  windowMaxAltitude: number | null; // degrees
 }
 
 export type VisibilityRating = 'best' | 'partial' | 'not-visible';

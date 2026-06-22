@@ -1,7 +1,7 @@
 import type { CalendarOptions, CalendarRow } from './types.js';
 import { getSunData } from './sun.js';
 import { getMoonData } from './moon.js';
-import { getGalacticCenterData, buildPositionLabel } from './galactic-center.js';
+import { getGalacticCenterData, gcWindowAltitudeRange, formatPositionLabel } from './galactic-center.js';
 import { getMwWindows } from './milky-way.js';
 import { scoreNight } from './scoring.js';
 import { makeObserver } from './observer.js';
@@ -37,7 +37,10 @@ export function generateCalendar(options: CalendarOptions): CalendarRow[] {
     // full rise→set arc (which includes daytime hours and always finds peak transit altitude).
     // Using the MW window shows the GC's altitude range during the shooting window.
     if (mwWindow) {
-      gc.positionLabel = buildPositionLabel(observer, mwWindow.start, mwWindow.end);
+      const range = gcWindowAltitudeRange(observer, mwWindow.start, mwWindow.end);
+      gc.positionLabel = formatPositionLabel(range);
+      gc.windowMinAltitude = range?.minAltitude ?? null;
+      gc.windowMaxAltitude = range?.maxAltitude ?? null;
     }
 
     const rating = scoreNight(location, mwWindow, gcClearWindow, moon);

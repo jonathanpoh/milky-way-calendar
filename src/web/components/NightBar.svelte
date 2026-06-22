@@ -266,19 +266,19 @@
     <!-- Lane 1 (top, thin): MW / GC visibility -->
     <div class="lane mw-lane">
       <div class="seg day" style="left:0%;width:{sunsetPct}%"></div>
-      <div class="seg" style="left:{sunsetPct}%;width:{sunrisePct-sunsetPct}%;background:#09090f"></div>
+      <div class="seg" style="left:{sunsetPct}%;width:{sunrisePct-sunsetPct}%;background:var(--night)"></div>
       <div class="seg day" style="left:{sunrisePct}%;width:{100-sunrisePct}%"></div>
       {#if mwSegs}
         {#each mwSegs.lit as sp}
-          <div class="seg" style="left:{sp.s}%;width:{sp.e-sp.s}%;background:#1a5c35"></div>
+          <div class="seg" style="left:{sp.s}%;width:{sp.e-sp.s}%;background:var(--mw-lit)"></div>
         {/each}
         {#each mwSegs.free as sp}
-          <div class="seg" style="left:{sp.s}%;width:{sp.e-sp.s}%;background:#1a7a45"></div>
+          <div class="seg" style="left:{sp.s}%;width:{sp.e-sp.s}%;background:var(--mw-free)"></div>
         {/each}
       {/if}
       {#if gcSegs}
         {#each gcSegs.free as sp}
-          <div class="seg" style="left:{sp.s}%;width:{sp.e-sp.s}%;background:#2db870"></div>
+          <div class="seg" style="left:{sp.s}%;width:{sp.e-sp.s}%;background:var(--gc-prime)"></div>
         {/each}
       {/if}
     </div>
@@ -286,9 +286,9 @@
     <!-- Lane 2 (middle, tall): Sky darkness — labels drawn inside -->
     <div class="lane sky-lane" class:labels-on={hovering}>
       <div class="seg day" style="left:0%;width:{sunsetPct}%"></div>
-      <div class="seg" style="left:{sunsetPct}%;width:{twilightEndPct-sunsetPct}%;background:linear-gradient(to right,#2a2050,#0f0f22)"></div>
-      <div class="seg" style="left:{twilightEndPct}%;width:{twilightStartPct-twilightEndPct}%;background:#09090f"></div>
-      <div class="seg" style="left:{twilightStartPct}%;width:{sunrisePct-twilightStartPct}%;background:linear-gradient(to right,#0f0f22,#2a2050)"></div>
+      <div class="seg" style="left:{sunsetPct}%;width:{twilightEndPct-sunsetPct}%;background:linear-gradient(to right,var(--tw-a),var(--tw-b))"></div>
+      <div class="seg" style="left:{twilightEndPct}%;width:{twilightStartPct-twilightEndPct}%;background:var(--night)"></div>
+      <div class="seg" style="left:{twilightStartPct}%;width:{sunrisePct-twilightStartPct}%;background:linear-gradient(to right,var(--tw-b),var(--tw-a))"></div>
       <div class="seg day" style="left:{sunrisePct}%;width:{100-sunrisePct}%"></div>
       <!-- Sky labels rendered inside the bar -->
       {#each skyLabels as lbl}
@@ -307,10 +307,10 @@
     <!-- Lane 3 (bottom, thin): Moon -->
     <div class="lane moon-lane">
       <div class="seg day" style="left:0%;width:{sunsetPct}%"></div>
-      <div class="seg" style="left:{sunsetPct}%;width:{sunrisePct-sunsetPct}%;background:#09090f"></div>
+      <div class="seg" style="left:{sunsetPct}%;width:{sunrisePct-sunsetPct}%;background:var(--night)"></div>
       <div class="seg day" style="left:{sunrisePct}%;width:{100-sunrisePct}%"></div>
       {#each moonSpans as ms}
-        <div class="seg" style="left:{ms.left}%;width:{ms.right-ms.left}%;background:rgba(255,200,80,{moonOpacity})"></div>
+        <div class="seg" style="left:{ms.left}%;width:{ms.right-ms.left}%;background:rgba(var(--moon),{moonOpacity})"></div>
       {/each}
     </div>
 
@@ -364,10 +364,10 @@
     line-height: 14px;
     font-weight: 500;
   }
-  .lbl.sun  { color: #f2a65a; }
-  .lbl.dark { color: #89b4fa; }
-  .lbl.mw   { color: #a6e3a1; }
-  .lbl.moon { color: #f9e2af; }
+  .lbl.sun  { color: var(--sun); }
+  .lbl.dark { color: var(--dark); }
+  .lbl.mw   { color: var(--mw); }
+  .lbl.moon { color: var(--moon-lbl); }
 
   /* Labels rendered inside the sky lane */
   .lbl-inside {
@@ -383,8 +383,8 @@
     opacity: 0;
     transition: opacity 0.15s;
   }
-  .lbl-inside.sun  { color: #f2a65a; }
-  .lbl-inside.dark { color: #89b4fa; }
+  .lbl-inside.sun  { color: var(--sun); }
+  .lbl-inside.dark { color: var(--dark); }
   .sky-lane.labels-on .lbl-inside { opacity: 1; }
 
   /* Lanes */
@@ -398,8 +398,8 @@
   .lane {
     position: relative;
     overflow: visible; /* allow inside labels to breathe at edges */
-    border-radius: 3px;
-    background: #09090f;
+    border-radius: 4px;
+    background: var(--night);
     flex-shrink: 0;
   }
   /* Clip the segments but not the labels */
@@ -407,7 +407,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 3px;
+    border-radius: 4px;
     overflow: hidden;
   }
   .sky-lane  { height: 20px; overflow: hidden; } /* tallest: holds labels */
@@ -418,7 +418,7 @@
     position: absolute;
     top: 0; bottom: 0;
   }
-  .seg.day { background: #3b3560; }
+  .seg.day { background: var(--day); }
 
   /* Tick overlay spans all lanes */
   .ticks-overlay {
@@ -432,8 +432,8 @@
     width: 1px;
     opacity: 0.45;
   }
-  .tick.sun  { background: #f2a65a; }
-  .tick.dark { background: #89b4fa; }
-  .tick.mw   { background: #a6e3a1; }
-  .tick.moon { background: #f9e2af; }
+  .tick.sun  { background: var(--sun); }
+  .tick.dark { background: var(--dark); }
+  .tick.mw   { background: var(--mw); }
+  .tick.moon { background: var(--moon-lbl); }
 </style>

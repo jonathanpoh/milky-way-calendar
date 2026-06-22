@@ -23,8 +23,8 @@
     ].join(' ');
   });
 
-  const bgFill = '#1e1e2e';
-  const moonFill = '#f9e2af';
+  const bgFill = 'var(--surface-2)';
+  const moonFill = 'var(--moon-lbl)';
 </script>
 
 <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} xmlns="http://www.w3.org/2000/svg" role="img" aria-label={illumination != null ? `Moon phase: ${illumination}% illuminated` : 'Moon phase'}>
@@ -32,5 +32,5 @@
   {#if path}
     <path d={path} fill={moonFill} />
   {/if}
-  <circle cx={r} cy={r} r={r - 0.5} fill="none" stroke="#585b70" stroke-width="1" />
+  <circle cx={r} cy={r} r={r - 0.5} fill="none" stroke="var(--text-faint)" stroke-width="1" />
 </svg>

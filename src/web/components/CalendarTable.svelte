@@ -164,8 +164,9 @@
   .month-bar {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.35rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: var(--sp-3);
   }
 
   .year-wrap {
@@ -173,12 +174,16 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    margin-right: 0.3rem;
   }
 
   .year-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #89b4fa;
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--text-faint);
   }
 
   .year-btn {
@@ -186,22 +191,23 @@
     align-items: center;
     gap: 0.35rem;
     padding: 0.3rem 0.6rem;
-    background: #1e1e2e;
-    border: 1px solid #45475a;
-    border-radius: 6px;
-    color: #cdd6f4;
-    font-size: 0.8rem;
-    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 700;
     cursor: pointer;
     transition: background 0.1s, border-color 0.1s;
     min-width: 5rem;
     justify-content: space-between;
+    font-variant-numeric: tabular-nums;
   }
-  .year-btn:hover  { background: #313244; border-color: #6c7086; }
+  .year-btn:hover  { background: var(--surface-2); border-color: var(--text-faint); }
 
   .chevron {
     font-size: 1.0rem;
-    color: #6c7086;
+    color: var(--text-faint);
     transition: transform 0.15s;
     display: inline-block;
   }
@@ -212,40 +218,43 @@
     top: calc(100% + 4px);
     left: 0;
     min-width: 100%;
-    background: #1e1e2e;
-    border: 1px solid #45475a;
-    border-radius: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
     margin: 0;
     padding: 0.25rem 0;
     list-style: none;
     z-index: 200;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
   }
   .year-dropdown li {
     padding: 0.35rem 0.7rem;
     font-size: 0.85rem;
-    color: #cdd6f4;
+    color: var(--text);
     cursor: pointer;
     font-variant-numeric: tabular-nums;
   }
-  .year-dropdown li:hover, .year-dropdown li.active { background: #313244; }
-  .year-dropdown li.selected { color: #89b4fa; font-weight: 600; }
+  .year-dropdown li:hover, .year-dropdown li.active { background: var(--surface); }
+  .year-dropdown li.selected { color: var(--azure); font-weight: 700; }
 
   .month-btn {
-    width: 3.8rem;
+    width: 3.6rem;
     padding: 0.3rem 0;
-    background: #1e1e2e;
-    border: 1px solid #45475a;
-    border-radius: 6px;
-    color: #a6adc8;
-    font-size: 0.8rem;
-    font-weight: 500;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.66rem;
+    font-weight: 700;
     cursor: pointer;
     text-align: center;
     transition: background 0.1s, border-color 0.1s, color 0.1s;
   }
-  .month-btn:hover  { background: #313244; border-color: #6c7086; color: #cdd6f4; }
-  .month-btn.active { background: #313244; border-color: #89b4fa; color: #cdd6f4; }
+  .month-btn:hover  { background: var(--surface-2); border-color: var(--text-faint); color: var(--text); }
+  .month-btn.active { background: var(--surface-2); border-color: var(--azure); color: var(--text); }
 
   .table-scroll {
     overflow-x: auto;
@@ -258,24 +267,29 @@
   }
 
   thead tr {
-    border-bottom: 2px solid #45475a;
+    border-bottom: 1px solid var(--text-faint);
   }
 
   th {
     padding: 0.4rem 0.6rem;
     text-align: left;
-    font-size: 0.78rem;
-    color: #89b4fa;
-    font-weight: 600;
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.62rem;
+    color: var(--text-faint);
+    font-weight: 700;
     white-space: nowrap;
   }
   .bar-header { width: 100%; }
   .hint {
-    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    font-size: 0.6rem;
     font-weight: 400;
-    color: #45475a;
+    color: var(--text-faint);
     margin-left: 0.4rem;
+    text-transform: none;
   }
 
-  .empty { text-align: center; padding: 2rem; color: #585b70; }
+  .empty { text-align: center; padding: 2rem; color: var(--text-faint); }
 </style>

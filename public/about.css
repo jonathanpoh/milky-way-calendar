@@ -1,117 +1,274 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Milky Way Calendar — global styles, design tokens, brand type (D-DIN)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Brand typeface: D-DIN (three widths, three jobs) ─────────────────────── */
+
+@font-face {
+  font-family: 'D-DIN';
+  src: url('/d-din/D-DIN.otf') format('opentype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'D-DIN';
+  src: url('/d-din/D-DIN-Bold.otf') format('opentype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'D-DIN';
+  src: url('/d-din/D-DIN-Italic.otf') format('opentype');
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'D-DIN Condensed';
+  src: url('/d-din/D-DINCondensed.otf') format('opentype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'D-DIN Condensed';
+  src: url('/d-din/D-DINCondensed-Bold.otf') format('opentype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'D-DIN Exp';
+  src: url('/d-din/D-DINExp.otf') format('opentype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'D-DIN Exp';
+  src: url('/d-din/D-DINExp-Bold.otf') format('opentype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+/* ── Design tokens ────────────────────────────────────────────────────────── */
+
+:root {
+  /* Shell — deep, cool astronomical night */
+  --void: #07080d;
+  --surface: #0e1119;
+  --surface-2: #161a25;
+  --hairline: #232a3b;
+  --text: #e8edf6;
+  --text-dim: #9aa4ba;
+  --text-faint: #5d6679;
+  --azure: #6aa8ff;       /* interactive accent / twilight blue */
+  --starlight: #f3e7c0;   /* best / highlight pale gold */
+
+  /* Data bars — same meanings as before, lightly tuned */
+  --gc-prime: #34d17e;    /* GC > 10°, moon-free: the prime window */
+  --mw-free: #1f9a57;     /* MW visible, moon-free */
+  --mw-lit: #1b6b40;      /* MW visible, moon up */
+  --moon: 255, 196, 84;   /* rgb tuple; opacity scales with illumination */
+  --night: #05060b;
+  --day: #2b3142;
+  --tw-a: #221a4a;        /* twilight gradient, sky side */
+  --tw-b: #0b0c1c;        /* twilight gradient, night side */
+
+  /* Event hues (ticks + labels) */
+  --sun: #f2a65a;
+  --dark: #89b4fa;
+  --mw: #a6e3a1;
+  --moon-lbl: #f9e2af;
+
+  /* Type */
+  --font-body: 'D-DIN', system-ui, sans-serif;
+  --font-display: 'D-DIN Condensed', 'D-DIN', system-ui, sans-serif;
+  --font-label: 'D-DIN Exp', 'D-DIN', system-ui, sans-serif;
+
+  /* Spacing scale */
+  --sp-1: 0.25rem; --sp-2: 0.5rem; --sp-3: 0.75rem;
+  --sp-4: 1rem;    --sp-5: 1.5rem; --sp-6: 2.5rem;
+
+  /* Layout */
+  --content-max: 1400px;
+  --radius: 6px;
+}
+
+/* ── Night-vision (red) mode — preserves dark adaptation in the field.
+   Meanings encoded by BRIGHTNESS, not hue: everything is a shade of red. ── */
+
+[data-theme="night-vision"] {
+  --void: #0a0202;
+  --surface: #160404;
+  --surface-2: #220808;
+  --hairline: #3a1110;
+  --text: #d2493a;
+  --text-dim: #8f2f25;
+  --text-faint: #5a201a;
+  --azure: #d2493a;
+  --starlight: #ff8a66;
+
+  --gc-prime: #ff5a42;    /* brightest red = prime window */
+  --mw-free: #b83a2b;
+  --mw-lit: #7a2418;
+  --moon: 255, 110, 70;
+  --night: #0a0202;
+  --day: #2a0d09;
+  --tw-a: #3a1110;
+  --tw-b: #140404;
+
+  --sun: #e0564a;
+  --dark: #b04030;
+  --mw: #ff8a66;
+  --moon-lbl: #ff7a52;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: #11111b;
-  color: #cdd6f4;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--azure);
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 /* ── Static site header ─────────────────────────────────────────────────── */
 
 #site-header {
-  max-width: 1400px;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 1.5rem 1rem 0;
+  padding: var(--sp-5) var(--sp-4) 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
 }
 
-#site-header h1 {
-  margin: 0 0 0.25rem;
-  font-size: 1.8rem;
-  color: #cdd6f4;
+#site-header .wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.4rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  margin: 0 0 var(--sp-1);
+  color: var(--text);
 }
 
 #site-header .subtitle {
   margin: 0;
-  color: #a6adc8;
-  font-size: 0.9rem;
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+  font-size: 0.68rem;
 }
+
+#theme-toggle { flex-shrink: 0; }
 
 /* ── Static site footer ─────────────────────────────────────────────────── */
 
 #site-footer {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 1rem 1.5rem;
+  max-width: var(--content-max);
+  margin: var(--sp-6) auto 0;
+  padding: var(--sp-5) var(--sp-4);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--sp-4);
+  border-top: 1px solid var(--hairline);
 }
+
+#site-footer .brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  text-decoration: none;
+}
+
+#site-footer .brand img {
+  height: 34px;
+  width: auto;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+
+#site-footer .brand:hover img { opacity: 1; }
 
 #site-footer .copy {
-  font-size: 0.75rem;
-  color: #45475a;
+  font-size: 0.72rem;
+  color: var(--text-faint);
   letter-spacing: 0.03em;
 }
-
-#site-footer .copy a {
-  color: #585b70;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-#site-footer .copy a:hover { color: #a6adc8; }
 
 #site-footer .gh-link {
   display: flex;
   align-items: center;
-  color: #45475a;
+  color: var(--text-faint);
   transition: color 0.15s;
 }
 
-#site-footer .gh-link:hover { color: #89b4fa; }
+#site-footer .gh-link:hover { color: var(--azure); }
 
-#site-footer .gh-icon {
-  width: 16px;
-  height: 16px;
-}
+#site-footer .gh-icon { width: 18px; height: 18px; }
 
 /* ── About section ──────────────────────────────────────────────────────── */
 
 #about {
   max-width: 900px;
-  margin: 3rem auto 0;
-  padding: 2rem 1rem 0;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  color: #cdd6f4;
-  border-top: 1px solid #1e1e2e;
+  margin: var(--sp-6) auto 0;
+  padding: var(--sp-6) var(--sp-4) 0;
+  color: var(--text);
+  border-top: 1px solid var(--hairline);
 }
 
 #about h1 {
-  font-size: 1.4rem;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
   font-weight: 700;
-  margin: 0 0 1rem;
-  color: #cdd6f4;
+  letter-spacing: 0.01em;
+  margin: 0 0 var(--sp-4);
+  color: var(--text);
 }
 
 #about h2 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 2rem 0 0.6rem;
-  color: #cdd6f4;
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: var(--sp-6) 0 var(--sp-3);
+  color: var(--azure);
 }
 
 #about p {
-  margin: 0 0 0.75rem;
-  font-size: 0.9rem;
-  line-height: 1.65;
-  color: #a6adc8;
+  margin: 0 0 var(--sp-3);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-dim);
 }
 
-#about dl {
-  margin: 0;
-}
+#about dl { margin: 0; }
 
 #about dt {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #a6e3a1;
-  margin-top: 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: var(--sp-5);
 }
 
 #about dd {
-  font-size: 0.9rem;
-  line-height: 1.65;
-  color: #a6adc8;
-  margin: 0.25rem 0 0 0;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+  margin: var(--sp-1) 0 0 0;
+}
+
+@media (max-width: 560px) {
+  #site-header { flex-direction: column; }
+  #site-header .wordmark { font-size: 2rem; }
+  #site-footer { flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
