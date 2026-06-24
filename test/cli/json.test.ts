@@ -77,4 +77,16 @@ describe('serializeRows', () => {
     const json = JSON.stringify(serialized);
     expect(() => JSON.parse(json)).not.toThrow();
   });
+
+  it('date follows the UTC calendar date, not the display timezone', () => {
+    // row.date is a UTC-anchored midnight; a negative-offset display timezone
+    // must not shift the serialized date back a day.
+    const oneRow = generateCalendar({
+      location: PALMELA,
+      startDate: new Date(Date.UTC(2026, 5, 1)),
+      endDate: new Date(Date.UTC(2026, 5, 1)),
+      interval: 1,
+    });
+    expect(serializeRows(oneRow, 'America/Los_Angeles')[0].date).toBe('2026-06-01');
+  });
 });

@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import type { CalendarRow } from '../core/types.js';
+import { formatMonth } from './format.js';
 
-export function renderSummary(rows: CalendarRow[], timezone = 'UTC'): string {
+export function renderSummary(rows: CalendarRow[]): string {
   const best = rows.filter(r => r.rating === 'best');
   const partial = rows.filter(r => r.rating === 'partial');
   const totalGcHours = rows.reduce((sum, r) => sum + (r.gcClearWindow?.durationHours ?? 0), 0);
@@ -10,7 +11,7 @@ export function renderSummary(rows: CalendarRow[], timezone = 'UTC'): string {
   const monthCounts = new Map<string, number>();
   for (const row of rows) {
     if (row.rating !== 'not-visible') {
-      const key = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'long', timeZone: timezone }).format(row.date);
+      const key = formatMonth(row.date);
       monthCounts.set(key, (monthCounts.get(key) ?? 0) + 1);
     }
   }

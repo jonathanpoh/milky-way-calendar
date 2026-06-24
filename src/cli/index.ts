@@ -80,6 +80,6 @@ if (opts.json) {
   console.log(`Timezone: ${timezone}`);
   console.log(`Period: ${startDate.toISOString().slice(0, 10)} → ${endDate.toISOString().slice(0, 10)}, every ${interval} day(s)\n`);
   console.log(renderTable(rows, timezone, opts.verbose));
-  console.log(renderSummary(rows, timezone));
+  console.log(renderSummary(rows));
 }
 

@@ -1,15 +1,10 @@
 import type { CalendarRow, TimeWindow } from '../core/types.js';
 import { moonEmoji } from './emoji.js';
+import { formatTime, formatDateISO } from './format.js';
 
 function fmtTime(d: Date | null, tz: string): string | null {
   if (!d) return null;
-  return new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz,
-  }).format(d);
-}
-
-function fmtDate(d: Date, tz: string): string {
-  return new Intl.DateTimeFormat('sv-SE', { timeZone: tz }).format(d);
+  return formatTime(d, tz);
 }
 
 function serializeWindow(win: TimeWindow | null, tz: string) {
@@ -19,7 +14,7 @@ function serializeWindow(win: TimeWindow | null, tz: string) {
 
 export function serializeRows(rows: CalendarRow[], tz: string) {
   return rows.map(r => ({
-    date: fmtDate(r.date, tz),
+    date: formatDateISO(r.date),
     rating: r.rating,
     shootingWindow: serializeWindow(r.shootingWindow, tz),
     moon: {

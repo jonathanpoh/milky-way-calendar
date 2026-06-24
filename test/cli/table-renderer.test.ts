@@ -3,10 +3,7 @@ import stringWidth from 'string-width';
 import { renderTable } from '../../src/cli/table-renderer.js';
 import { generateCalendar } from '../../src/core/calendar.js';
 import { PALMELA } from '../fixtures/locations.js';
-
-function stripAnsi(s: string): string {
-  return s.replace(/\x1b\[[0-9;]*m/g, '');
-}
+import { stripAnsi } from './helpers.js';
 
 const rows = generateCalendar({
   location: PALMELA,
@@ -64,5 +61,19 @@ describe('renderTable', () => {
     for (const line of lines) {
       expect(line).toMatch(/🌑|🌒|🌓|🌔|🌕|🌖|🌗|🌘/);
     }
+  });
+
+  it('date label follows the UTC calendar date, not the display timezone', () => {
+    // row.date is a UTC-anchored midnight; a negative-offset display timezone
+    // must not shift the label back a day.
+    const oneRow = generateCalendar({
+      location: PALMELA,
+      startDate: new Date(Date.UTC(2026, 5, 1)),
+      endDate: new Date(Date.UTC(2026, 5, 1)),
+      interval: 1,
+    });
+    const output = stripAnsi(renderTable(oneRow, 'America/Los_Angeles'));
+    const dataLine = output.split('\n')[2];
+    expect(dataLine).toMatch(/^01 Jun/);
   });
 });
