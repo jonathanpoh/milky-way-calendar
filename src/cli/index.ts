@@ -4,6 +4,7 @@ import tzlookup from 'tz-lookup';
 import { generateCalendar } from '../core/calendar.js';
 import { renderTable } from './table-renderer.js';
 import { renderSummary } from './summary.js';
+import { serializeRows } from './json.js';
 
 const program = new Command();
 
@@ -16,14 +17,18 @@ program
   .option('--year <number>', 'Year', String(new Date().getFullYear()))
   .option('--start <date>', 'Start date (YYYY-MM-DD)')
   .option('--end <date>', 'End date (YYYY-MM-DD)')
+  .option('--days <number>', 'Number of days from --start (alternative to --end)')
   .option('--interval <days>', 'Days between rows', '7')
   .option('--timezone <tz>', 'Display timezone (IANA)')
+  .option('-v, --verbose', 'Show extra columns (dark window, MW window, GC clear)')
+  .option('--json', 'Output as JSON')
   .parse(process.argv);
 
 const opts = program.opts<{
   lat: string; lon: string; name: string;
-  year: string; start?: string; end?: string;
+  year: string; start?: string; end?: string; days?: string;
   interval: string; timezone?: string;
+  verbose?: boolean; json?: boolean;
 }>();
 
 const lat = parseFloat(opts.lat);
@@ -48,6 +53,17 @@ if (!Number.isFinite(interval) || interval < 1) {
   process.exit(1);
 }
 
+if (opts.days && opts.end) {
+  console.error('Error: --days and --end are mutually exclusive');
+  process.exit(1);
+}
+
+const days = opts.days ? parseInt(opts.days, 10) : undefined;
+if (days !== undefined && (!Number.isFinite(days) || days < 1)) {
+  console.error('Error: --days must be >= 1');
+  process.exit(1);
+}
+
 let timezone: string;
 if (opts.timezone) {
   timezone = opts.timezone;
@@ -60,11 +76,14 @@ if (opts.timezone) {
 }
 
 const startDate = opts.start ? new Date(opts.start) : new Date(Date.UTC(year, 0, 1));
-const endDate = opts.end ? new Date(opts.end) : new Date(Date.UTC(year, 11, 31));
-
-console.log(`\nMilky Way Calendar — ${opts.name} (${lat}°, ${lon}°)`);
-console.log(`Timezone: ${timezone}`);
-console.log(`Period: ${startDate.toISOString().slice(0, 10)} → ${endDate.toISOString().slice(0, 10)}, every ${interval} day(s)\n`);
+let endDate: Date;
+if (opts.end) {
+  endDate = new Date(opts.end);
+} else if (days !== undefined) {
+  endDate = new Date(startDate.getTime() + (days - 1) * 86_400_000);
+} else {
+  endDate = new Date(Date.UTC(year, 11, 31));
+}
 
 const rows = generateCalendar({
   location: { lat, lon, name: opts.name, timezone },
@@ -73,5 +92,13 @@ const rows = generateCalendar({
   interval,
 });
 
-console.log(renderTable(rows, timezone));
-console.log(renderSummary(rows, timezone));
+if (opts.json) {
+  console.log(JSON.stringify(serializeRows(rows, timezone), null, 2));
+} else {
+  console.log(`\nMilky Way Calendar — ${opts.name} (${lat}°, ${lon}°)`);
+  console.log(`Timezone: ${timezone}`);
+  console.log(`Period: ${startDate.toISOString().slice(0, 10)} → ${endDate.toISOString().slice(0, 10)}, every ${interval} day(s)\n`);
+  console.log(renderTable(rows, timezone, opts.verbose));
+  console.log(renderSummary(rows));
+}
+

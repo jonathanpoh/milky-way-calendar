@@ -2,7 +2,7 @@
 
 An interactive planning tool for landscape astrophotography sessions. Calculates Milky Way (galactic center) visibility, moon interference, and sky darkness for any location and date range.
 
-Available as a **web app** (Svelte, runs entirely in the browser). A CLI tool is also in progress.
+Available as a **web app** (Svelte, runs entirely in the browser) and a **CLI tool** for terminal use and scripting.
 
 ## Features
 
@@ -40,9 +40,7 @@ Enable the following APIs for the key in Google Cloud Console:
 - Places API (New)
 - Geolocation API
 
-## CLI ⚠️ Work in Progress
-
-> The CLI is functional but still being polished — output formatting may change.
+## CLI
 
 ```bash
 npm run cli -- --lat 38.18 --lon -7.59 --name "Alqueva, Portugal" --year 2026
@@ -58,8 +56,17 @@ npm run cli -- --lat 38.18 --lon -7.59 --name "Alqueva, Portugal" --year 2026
 | `--year` | current year | Year to generate |
 | `--start` | Jan 1 | Start date (YYYY-MM-DD) |
 | `--end` | Dec 31 | End date (YYYY-MM-DD) |
+| `--days` | | Number of days from `--start` (alternative to `--end`) |
 | `--interval` | `7` | Days between rows |
 | `--timezone` | auto (from coords) | Display timezone (IANA) |
+| `-v, --verbose` | | Show extra columns (dark window, MW window, GC clear) |
+| `--json` | | Output as JSON |
+
+**JSON output** is pipe-friendly — dates as `YYYY-MM-DD`, times as `HH:MM` in the display timezone:
+
+```bash
+npm run cli -- --start 2026-06-15 --end 2026-06-15 --json | jq '.[].shootingWindow'
+```
 
 ## Development
 
@@ -81,7 +88,7 @@ src/
     sun.ts
     milky-way.ts
     scoring.ts
-  cli/            # terminal table renderer (WIP)
+  cli/            # terminal output (table, summary, JSON)
   web/            # Svelte app
     components/
     stores/
