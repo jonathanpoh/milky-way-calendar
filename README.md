@@ -56,6 +56,7 @@ npm run cli -- --lat 38.18 --lon -7.59 --name "Alqueva, Portugal" --year 2026
 | `--year` | current year | Year to generate |
 | `--start` | Jan 1 | Start date (YYYY-MM-DD) |
 | `--end` | Dec 31 | End date (YYYY-MM-DD) |
+| `--days` | | Number of days from `--start` (alternative to `--end`) |
 | `--interval` | `7` | Days between rows |
 | `--timezone` | auto (from coords) | Display timezone (IANA) |
 | `-v, --verbose` | | Show extra columns (dark window, MW window, GC clear) |
